@@ -29,7 +29,7 @@ public class Notification extends BaseEntity {
     @Column(nullable = false, length = 30)
     private NotificationType type;
 
-    @Column(name = "is_read", nullable = false)
     @Builder.Default
+    @Column(name = "is_read", nullable = false)
     private boolean read = false;
 }

@@ -11,10 +11,10 @@ import java.util.UUID;
 public record TaskCreateRequest(
 
         @NotBlank(message = "Task title is required")
-        @Size(max = 150, message = "Task title must not exceed 150 characters")
+        @Size(max = 150)
         String title,
 
-        @Size(max = 1000, message = "Description must not exceed 1000 characters")
+        @Size(max = 1000)
         String description,
 
         TaskStatus status,
@@ -22,8 +22,6 @@ public record TaskCreateRequest(
         TaskPriority priority,
 
         LocalDate dueDate,
-
-        UUID projectId,
 
         UUID assignedTo
 ) {

@@ -2,14 +2,16 @@ package com.badr.teamprojectmanagement.common.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@MappedSuperclass
 @Getter
 @Setter
+@NoArgsConstructor
+@MappedSuperclass
 public abstract class BaseEntity {
 
     @Id

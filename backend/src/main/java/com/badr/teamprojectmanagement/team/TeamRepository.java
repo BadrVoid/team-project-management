@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface TeamRepository extends JpaRepository<Team, UUID> {
 
-    List<Team> findAllByProjectId(UUID projectId);
+    List<Team> findByProjectId(UUID projectId);
 }

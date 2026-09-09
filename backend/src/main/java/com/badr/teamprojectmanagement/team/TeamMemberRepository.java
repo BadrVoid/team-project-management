@@ -1,18 +1,29 @@
 package com.badr.teamprojectmanagement.team;
 
+import com.badr.teamprojectmanagement.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
+public interface TeamMemberRepository
+        extends JpaRepository<TeamMember, UUID> {
 
-    Optional<TeamMember> findByTeamIdAndUserId(UUID teamId, UUID userId);
+    List<TeamMember> findByTeamId(UUID teamId);
 
-    boolean existsByTeamIdAndUserId(UUID teamId, UUID userId);
+    Optional<TeamMember> findByTeamIdAndUser(
+            UUID teamId,
+            User user
+    );
 
-    List<TeamMember> findAllByTeamId(UUID teamId);
+    boolean existsByTeamIdAndUser(
+            UUID teamId,
+            User user
+    );
 
-    List<TeamMember> findAllByUserId(UUID userId);
+    boolean existsByTeamIdAndUserId(
+            UUID teamId,
+            UUID userId
+    );
 }

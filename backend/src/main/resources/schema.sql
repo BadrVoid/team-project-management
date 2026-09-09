@@ -71,6 +71,7 @@ CREATE TABLE project_members
     project_id UUID        NOT NULL,
     user_id    UUID        NOT NULL,
     role       VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    status     VARCHAR(20) NOT NULL DEFAULT 'ACCEPTED',
     created_at TIMESTAMP   NOT NULL,
     updated_at TIMESTAMP   NOT NULL,
 
@@ -92,6 +93,13 @@ CREATE TABLE project_members
                         'OWNER',
                         'MANAGER',
                         'MEMBER'
+            )),
+
+    CONSTRAINT chk_project_members_status
+        CHECK (status IN (
+                          'PENDING',
+                          'ACCEPTED',
+                          'REJECTED'
             ))
 );
 
@@ -279,6 +287,37 @@ CREATE TABLE otps
             ))
 );
 
+-- Project Join Requests
+CREATE TABLE project_join_requests
+(
+    id         UUID PRIMARY KEY,
+    project_id UUID        NOT NULL,
+    user_id    UUID        NOT NULL,
+    status     VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP   NOT NULL,
+    updated_at TIMESTAMP   NOT NULL,
+
+    CONSTRAINT fk_project_join_requests_project
+        FOREIGN KEY (project_id)
+            REFERENCES projects (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_project_join_requests_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT uk_project_join_request
+        UNIQUE (project_id, user_id),
+
+    CONSTRAINT chk_project_join_requests_status
+        CHECK (status IN (
+                          'PENDING',
+                          'ACCEPTED',
+                          'REJECTED'
+            ))
+);
+
 -- Indexes
 CREATE INDEX idx_spaces_owner_id
     ON spaces (owner_id);
@@ -294,6 +333,12 @@ CREATE INDEX idx_project_members_project_id
 
 CREATE INDEX idx_project_members_user_id
     ON project_members (user_id);
+
+CREATE INDEX idx_project_join_requests_project_id
+    ON project_join_requests (project_id);
+
+CREATE INDEX idx_project_join_requests_user_id
+    ON project_join_requests (user_id);
 
 CREATE INDEX idx_teams_project_id
     ON teams (project_id);
@@ -331,6 +376,5 @@ CREATE INDEX idx_otps_user_type
 CREATE INDEX idx_otps_expires_at
     ON otps (expires_at);
 
---RESET THE SCHEMA
 drop SCHEMA public cascade
 CREATE SCHEMA public;
