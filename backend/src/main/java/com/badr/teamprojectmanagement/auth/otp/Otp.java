@@ -1,6 +1,5 @@
 package com.badr.teamprojectmanagement.auth.otp;
 
-
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
 import com.badr.teamprojectmanagement.common.enums.OtpType;
 import com.badr.teamprojectmanagement.user.User;
@@ -13,15 +12,21 @@ import java.time.LocalDateTime;
 @Table(
         name = "otps",
         indexes = {
-                @Index(name = "idx_otp_user_type", columnList = "user_id,type"),
-                @Index(name = "idx_otp_expires_at", columnList = "expires_at")
+                @Index(
+                        name = "idx_otp_user_type",
+                        columnList = "user_id,type"
+                ),
+                @Index(
+                        name = "idx_otp_expires_at",
+                        columnList = "expires_at"
+                )
         }
 )
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Otp extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -42,11 +47,11 @@ public class Otp extends BaseEntity {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(nullable = false)
     @Builder.Default
+    @Column(nullable = false)
     private boolean used = false;
 
-    @Column(nullable = false)
     @Builder.Default
+    @Column(nullable = false)
     private int attempts = 0;
 }

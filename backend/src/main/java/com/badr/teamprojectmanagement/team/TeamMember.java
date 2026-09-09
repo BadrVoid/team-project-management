@@ -28,8 +28,8 @@ public class TeamMember extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    @Builder.Default
     private TeamMemberRole role = TeamMemberRole.MEMBER;
 }

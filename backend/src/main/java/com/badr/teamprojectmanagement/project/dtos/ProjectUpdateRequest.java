@@ -1,5 +1,6 @@
 package com.badr.teamprojectmanagement.project.dtos;
 
+import com.badr.teamprojectmanagement.common.enums.ProjectStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -14,8 +15,9 @@ public record ProjectUpdateRequest(
         @Size(max = 500, message = "Description must not exceed 500 characters")
         String description,
 
+        ProjectStatus status,
+
         LocalDate startDate,
 
         LocalDate endDate
-) {
-}
+) {}
