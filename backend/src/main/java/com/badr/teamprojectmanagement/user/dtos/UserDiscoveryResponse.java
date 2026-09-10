@@ -2,9 +2,10 @@ package com.badr.teamprojectmanagement.user.dtos;
 
 import com.badr.teamprojectmanagement.common.enums.UserRole;
 
+import java.util.List;
 import java.util.UUID;
 
-public record UserResponse(
+public record UserDiscoveryResponse(
 
         UUID id,
 
@@ -12,11 +13,14 @@ public record UserResponse(
 
         String lastName,
 
-        String email,
-
         UserRole role,
 
-        boolean emailVerified,
-        boolean banned
+        String bio,
+
+        String avatarUrl,
+
+        List<String> skills,
+
+        List<String> tags
 ) {
 }

@@ -1,3 +1,4 @@
+
 package com.badr.teamprojectmanagement.auth;
 
 import com.badr.teamprojectmanagement.auth.RefreshToken;
@@ -14,13 +15,13 @@ import com.badr.teamprojectmanagement.auth.otp.OtpService;
 import com.badr.teamprojectmanagement.common.enums.OtpType;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
+import com.badr.teamprojectmanagement.security.JwtService;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.badr.teamprojectmanagement.auth.service.AuthService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,12 +29,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AuthServiceImpl implements AuthService {
+public class AuthServiceImpl implements com.badr.teamprojectmanagement.auth.service.AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtService jwtService;
 
     @Override
     public void register(RegisterRequest request) {
@@ -62,13 +64,23 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() ->
-                        new BadRequestException("Invalid email or password"));
+                        new BadRequestException(
+                                "Invalid email or password"
+                        ));
+
+        if (user.isBanned()) {
+            throw new BadRequestException(
+                    "Your account has been banned"
+            );
+        }
 
         if (!passwordEncoder.matches(
                 request.password(),
                 user.getPassword()
         )) {
-            throw new BadRequestException("Invalid email or password");
+            throw new BadRequestException(
+                    "Invalid email or password"
+            );
         }
 
         if (!user.isVerified()) {
@@ -77,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        String accessToken = generateAccessToken(user);
+        String accessToken = jwtService.generateToken(user);
 
         RefreshToken refreshToken = createRefreshToken(user);
 
@@ -100,12 +112,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse refreshToken(RefreshTokenRequest request) {
+    public LoginResponse refreshToken(
+            RefreshTokenRequest request
+    ) {
 
-        RefreshToken refreshToken = refreshTokenRepository
-                .findByToken(request.refreshToken())
-                .orElseThrow(() ->
-                        new BadRequestException("Invalid refresh token"));
+        RefreshToken refreshToken =
+                refreshTokenRepository.findByToken(
+                        request.refreshToken()
+                ).orElseThrow(() ->
+                        new BadRequestException(
+                                "Invalid refresh token"
+                        ));
 
         if (refreshToken.getExpiresAt()
                 .isBefore(LocalDateTime.now())) {
@@ -119,7 +136,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = refreshToken.getUser();
 
-        String accessToken = generateAccessToken(user);
+        String accessToken = jwtService.generateToken(user);
 
         return new LoginResponse(
                 accessToken,
@@ -128,7 +145,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void forgotPassword(ForgotPasswordRequest request) {
+    public void forgotPassword(
+            ForgotPasswordRequest request
+    ) {
 
         User user = findUserByEmail(request.email());
 
@@ -139,7 +158,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void resetPassword(ResetPasswordRequest request) {
+    public void resetPassword(
+            ResetPasswordRequest request
+    ) {
 
         User user = findUserByEmail(request.email());
 
@@ -150,7 +171,9 @@ public class AuthServiceImpl implements AuthService {
         );
 
         user.setPassword(
-                passwordEncoder.encode(request.newPassword())
+                passwordEncoder.encode(
+                        request.newPassword()
+                )
         );
 
         userRepository.save(user);
@@ -166,9 +189,12 @@ public class AuthServiceImpl implements AuthService {
             UUID userId,
             ChangePasswordRequest request
     ) {
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(
+                                "User not found"
+                        ));
 
         if (!passwordEncoder.matches(
                 request.currentPassword(),
@@ -180,7 +206,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.setPassword(
-                passwordEncoder.encode(request.newPassword())
+                passwordEncoder.encode(
+                        request.newPassword()
+                )
         );
 
         userRepository.save(user);
@@ -189,10 +217,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(RefreshTokenRequest request) {
 
-        RefreshToken refreshToken = refreshTokenRepository
-                .findByToken(request.refreshToken())
-                .orElseThrow(() ->
-                        new BadRequestException("Invalid refresh token"));
+        RefreshToken refreshToken =
+                refreshTokenRepository.findByToken(
+                        request.refreshToken()
+                ).orElseThrow(() ->
+                        new BadRequestException(
+                                "Invalid refresh token"
+                        ));
 
         refreshTokenRepository.delete(refreshToken);
     }
@@ -211,15 +242,13 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
-                .expiresAt(LocalDateTime.now().plusDays(7))
+                .expiresAt(
+                        LocalDateTime.now().plusDays(7)
+                )
                 .build();
 
         return refreshTokenRepository.save(refreshToken);
     }
-
-    private String generateAccessToken(User user) {
-
-        // Will be replaced with JwtService.
-        return "JWT_GENERATION";
-    }
 }
+
+

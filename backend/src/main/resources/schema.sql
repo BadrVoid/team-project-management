@@ -1,6 +1,15 @@
--- Team Project Management Database Schema -- PostgreSQL --
+-- Team Project Management Database Schema
+-- PostgreSQL
+
+
+-- Reset database schema
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+
 
 -- Users
+
+
 CREATE TABLE users
 (
     id          UUID PRIMARY KEY,
@@ -10,6 +19,7 @@ CREATE TABLE users
     password    VARCHAR(255) NOT NULL,
     role        VARCHAR(20)  NOT NULL DEFAULT 'USER',
     is_verified BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_banned   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMP    NOT NULL,
     updated_at  TIMESTAMP    NOT NULL,
 
@@ -17,7 +27,59 @@ CREATE TABLE users
         CHECK (role IN ('USER', 'ADMIN'))
 );
 
+
+-- User Profiles
+
+
+CREATE TABLE user_profiles
+(
+    id         UUID PRIMARY KEY,
+    user_id    UUID NOT NULL UNIQUE,
+    bio        VARCHAR(500),
+    university VARCHAR(255),
+    department VARCHAR(255),
+    avatar_url VARCHAR(500),
+
+    CONSTRAINT fk_user_profiles_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE
+);
+
+
+-- User Profile Skills
+
+
+CREATE TABLE user_profile_skills
+(
+    profile_id UUID         NOT NULL,
+    skill      VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_user_profile_skills_profile
+        FOREIGN KEY (profile_id)
+            REFERENCES user_profiles (id)
+            ON DELETE CASCADE
+);
+
+
+-- User Profile Tags
+
+
+CREATE TABLE user_profile_tags
+(
+    profile_id UUID         NOT NULL,
+    tag        VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_user_profile_tags_profile
+        FOREIGN KEY (profile_id)
+            REFERENCES user_profiles (id)
+            ON DELETE CASCADE
+);
+
+
 -- Spaces
+
+
 CREATE TABLE spaces
 (
     id          UUID PRIMARY KEY,
@@ -32,7 +94,10 @@ CREATE TABLE spaces
             REFERENCES users (id)
 );
 
+
 -- Projects
+
+
 CREATE TABLE projects
 (
     id          UUID PRIMARY KEY,
@@ -64,7 +129,10 @@ CREATE TABLE projects
             ))
 );
 
+
 -- Project Members
+
+
 CREATE TABLE project_members
 (
     id         UUID PRIMARY KEY,
@@ -103,7 +171,10 @@ CREATE TABLE project_members
             ))
 );
 
+
 -- Teams
+
+
 CREATE TABLE teams
 (
     id          UUID PRIMARY KEY,
@@ -122,7 +193,10 @@ CREATE TABLE teams
         UNIQUE (project_id, name)
 );
 
+
 -- Team Members
+
+
 CREATE TABLE team_members
 (
     id         UUID PRIMARY KEY,
@@ -152,7 +226,10 @@ CREATE TABLE team_members
             ))
 );
 
+
 -- Tasks
+
+
 CREATE TABLE tasks
 (
     id          UUID PRIMARY KEY,
@@ -163,7 +240,7 @@ CREATE TABLE tasks
     description TEXT,
     status      VARCHAR(20)  NOT NULL DEFAULT 'TODO',
     priority    VARCHAR(20)  NOT NULL DEFAULT 'MEDIUM',
-    due_date    TIMESTAMP,
+    due_date    DATE,
     created_at  TIMESTAMP    NOT NULL,
     updated_at  TIMESTAMP    NOT NULL,
 
@@ -198,7 +275,10 @@ CREATE TABLE tasks
             ))
 );
 
+
 -- Task Comments
+
+
 CREATE TABLE task_comments
 (
     id         UUID PRIMARY KEY,
@@ -219,7 +299,10 @@ CREATE TABLE task_comments
             ON DELETE CASCADE
 );
 
+
 -- Notifications
+
+
 CREATE TABLE notifications
 (
     id         UUID PRIMARY KEY,
@@ -247,7 +330,10 @@ CREATE TABLE notifications
             ))
 );
 
+
 -- Refresh Tokens
+
+
 CREATE TABLE refresh_tokens
 (
     id         UUID PRIMARY KEY,
@@ -262,7 +348,10 @@ CREATE TABLE refresh_tokens
             ON DELETE CASCADE
 );
 
+
 -- OTPs
+
+
 CREATE TABLE otps
 (
     id         UUID PRIMARY KEY,
@@ -287,7 +376,10 @@ CREATE TABLE otps
             ))
 );
 
+
 -- Project Join Requests
+
+
 CREATE TABLE project_join_requests
 (
     id         UUID PRIMARY KEY,
@@ -318,7 +410,43 @@ CREATE TABLE project_join_requests
             ))
 );
 
+
 -- Indexes
+
+
+CREATE INDEX idx_users_first_name
+    ON users (first_name);
+
+CREATE INDEX idx_users_last_name
+    ON users (last_name);
+
+CREATE INDEX idx_users_email
+    ON users (email);
+
+CREATE INDEX idx_users_role
+    ON users (role);
+
+CREATE INDEX idx_users_verified
+    ON users (is_verified);
+
+CREATE INDEX idx_users_banned
+    ON users (is_banned);
+
+CREATE INDEX idx_user_profiles_user_id
+    ON user_profiles (user_id);
+
+CREATE INDEX idx_user_profile_skills_profile_id
+    ON user_profile_skills (profile_id);
+
+CREATE INDEX idx_user_profile_skills_skill
+    ON user_profile_skills (skill);
+
+CREATE INDEX idx_user_profile_tags_profile_id
+    ON user_profile_tags (profile_id);
+
+CREATE INDEX idx_user_profile_tags_tag
+    ON user_profile_tags (tag);
+
 CREATE INDEX idx_spaces_owner_id
     ON spaces (owner_id);
 
@@ -375,6 +503,3 @@ CREATE INDEX idx_otps_user_type
 
 CREATE INDEX idx_otps_expires_at
     ON otps (expires_at);
-
-drop SCHEMA public cascade
-CREATE SCHEMA public;
