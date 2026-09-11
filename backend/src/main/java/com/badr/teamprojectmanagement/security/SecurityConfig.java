@@ -1,5 +1,8 @@
 package com.badr.teamprojectmanagement.security;
 
+import com.badr.teamprojectmanagement.auth.oauth.CustomOAuth2UserService;
+import com.badr.teamprojectmanagement.auth.oauth.CustomOidcUserService;
+import com.badr.teamprojectmanagement.auth.oauth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,16 +22,31 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+    private final CustomOidcUserService customOidcUserService;
+
+    private final OAuth2AuthenticationSuccessHandler
+            oauth2AuthenticationSuccessHandler;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
 
         http
-                // REST API does not use CSRF/session authentication
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // JWT authentication is stateless
+                /*
+                 * OAuth2 login needs a temporary session during
+                 * the authorization-code redirect flow.
+                 *
+                 * Your normal API authentication is still JWT-based.
+                 */
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.IF_REQUIRED
+                        )
                 )
 
                 .authorizeHttpRequests(auth -> auth
@@ -40,16 +58,44 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Authentication
+                        // Local authentication
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
+
+                        // OAuth2 authorization
                         .requestMatchers(
-                                "/api/auth/**"
+                                "/oauth2/**",
+                                "/login/oauth2/**"
                         ).permitAll()
 
-                        // Everything else requires JWT authentication
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
 
-                // Run JWT filter before Spring's username/password filter
+                /*
+                 * OAuth2 Login
+                 */
+                .oauth2Login(oauth2 -> oauth2
+
+                        .userInfoEndpoint(userInfo -> userInfo
+
+                                .userService(
+                                        customOAuth2UserService
+                                )
+
+                                .oidcUserService(
+                                        customOidcUserService
+                                )
+                        )
+
+                        .successHandler(
+                                oauth2AuthenticationSuccessHandler
+                        )
+                )
+
+                /*
+                 * Our existing JWT authentication.
+                 */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -58,8 +104,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

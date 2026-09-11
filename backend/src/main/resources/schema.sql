@@ -449,6 +449,26 @@ CREATE TABLE otps
             )
 );
 
+--user_authentications
+
+CREATE TABLE user_authentications
+(
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id     UUID         NOT NULL,
+
+    provider    VARCHAR(20)  NOT NULL,
+
+    provider_id VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_user_authentication_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT uk_provider_provider_id
+        UNIQUE (provider, provider_id)
+);
 
 -- INDEXES
 

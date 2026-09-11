@@ -8,6 +8,8 @@ import com.badr.teamprojectmanagement.auth.dtos.RefreshTokenRequest;
 import com.badr.teamprojectmanagement.auth.dtos.RegisterRequest;
 import com.badr.teamprojectmanagement.auth.dtos.ResetPasswordRequest;
 import com.badr.teamprojectmanagement.auth.dtos.VerifyOtpRequest;
+import com.badr.teamprojectmanagement.user.User;
+
 
 import java.util.UUID;
 
@@ -20,6 +22,10 @@ public interface AuthService {
     void verifyOtp(VerifyOtpRequest request);
 
     LoginResponse refreshToken(RefreshTokenRequest request);
+
+    LoginResponse loginWithOAuthUser(User user);
+
+    User findUserForOAuth(String email);
 
     void forgotPassword(ForgotPasswordRequest request);
 

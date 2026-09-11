@@ -112,6 +112,36 @@ public class AuthServiceImpl implements com.badr.teamprojectmanagement.auth.Auth
     }
 
     @Override
+    public LoginResponse loginWithOAuthUser(User user) {
+
+        if (user.isBanned()) {
+            throw new BadRequestException(
+                    "Your account has been banned"
+            );
+        }
+
+        String accessToken = jwtService.generateToken(user);
+
+        RefreshToken refreshToken = createRefreshToken(user);
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken.getToken()
+        );
+    }
+
+
+    @Override
+    public User findUserForOAuth(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "OAuth user not found"
+                        ));
+    }
+
+    @Override
     public LoginResponse refreshToken(
             RefreshTokenRequest request
     ) {
