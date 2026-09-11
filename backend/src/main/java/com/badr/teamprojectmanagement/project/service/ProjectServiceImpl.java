@@ -1,5 +1,6 @@
 package com.badr.teamprojectmanagement.project.service;
 
+import com.badr.teamprojectmanagement.common.enums.ProjectStatus;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.project.Project;
 import com.badr.teamprojectmanagement.project.ProjectMapper;
@@ -55,7 +56,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .space(space)
                 .name(request.name())
                 .description(request.description())
-                .status(request.status())
+                .status(
+                        request.status() != null
+                                ? request.status()
+                                : ProjectStatus.PLANNING
+                )
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .createdBy(creator)

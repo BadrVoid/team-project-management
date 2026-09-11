@@ -1,5 +1,6 @@
 package com.badr.teamprojectmanagement.space.service;
 
+import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.space.Space;
 import com.badr.teamprojectmanagement.space.SpaceRepository;
@@ -76,34 +77,45 @@ public class SpaceServiceImpl implements SpaceService {
     }
 
     @Override
-    public SpaceResponse updateSpace(UUID id, SpaceUpdateRequest request) {
-
-        //Find space
+    public SpaceResponse updateSpace(
+            UUID id,
+            UUID ownerId,
+            SpaceUpdateRequest request
+    ) {
         Space space = spaceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Space not found")
                 );
 
-        //Update space information
+        if (!space.getOwner().getId().equals(ownerId)) {
+            throw new ForbiddenException(
+                    "You are not allowed to update this space"
+            );
+        }
+
         space.setName(request.name());
         space.setDescription(request.description());
 
-        //Save updated space
         spaceRepository.save(space);
 
         return mapToResponse(space);
     }
 
     @Override
-    public void deleteSpace(UUID id) {
+    public void deleteSpace(UUID id, UUID ownerId) {
 
-        //Check if space exists
-        if (!spaceRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Space not found");
+        Space space = spaceRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Space not found")
+                );
+
+        if (!space.getOwner().getId().equals(ownerId)) {
+            throw new ForbiddenException(
+                    "You are not allowed to delete this space"
+            );
         }
 
-        //Delete space
-        spaceRepository.deleteById(id);
+        spaceRepository.delete(space);
     }
 
     private SpaceResponse mapToResponse(Space space) {

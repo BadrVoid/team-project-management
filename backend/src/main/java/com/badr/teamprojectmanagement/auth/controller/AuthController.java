@@ -8,7 +8,7 @@ import com.badr.teamprojectmanagement.auth.dtos.RefreshTokenRequest;
 import com.badr.teamprojectmanagement.auth.dtos.RegisterRequest;
 import com.badr.teamprojectmanagement.auth.dtos.ResetPasswordRequest;
 import com.badr.teamprojectmanagement.auth.dtos.VerifyOtpRequest;
-import com.badr.teamprojectmanagement.auth.service.AuthService;
+import com.badr.teamprojectmanagement.auth.AuthService;
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -15,7 +15,11 @@ public interface SpaceService {
 
     List<SpaceResponse> getSpacesByOwner(UUID ownerId);
 
-    SpaceResponse updateSpace(UUID id, SpaceUpdateRequest request);
+    SpaceResponse updateSpace(
+            UUID id,
+            UUID ownerId,
+            SpaceUpdateRequest request
+    );
 
-    void deleteSpace(UUID id);
+    void deleteSpace(UUID id, UUID ownerId);
 }

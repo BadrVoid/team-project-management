@@ -1,4 +1,4 @@
-package com.badr.teamprojectmanagement.auth.service;
+package com.badr.teamprojectmanagement.auth;
 
 import com.badr.teamprojectmanagement.auth.dtos.ChangePasswordRequest;
 import com.badr.teamprojectmanagement.auth.dtos.ForgotPasswordRequest;

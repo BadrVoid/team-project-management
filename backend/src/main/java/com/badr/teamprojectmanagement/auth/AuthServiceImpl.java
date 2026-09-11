@@ -29,7 +29,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AuthServiceImpl implements com.badr.teamprojectmanagement.auth.service.AuthService {
+public class AuthServiceImpl implements com.badr.teamprojectmanagement.auth.AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
