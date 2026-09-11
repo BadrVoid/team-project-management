@@ -1,28 +1,29 @@
 package com.badr.teamprojectmanagement.task.service;
 
-import com.badr.teamprojectmanagement.task.dtos.CommentCreateRequest;
-import com.badr.teamprojectmanagement.task.dtos.CommentResponse;
-import com.badr.teamprojectmanagement.task.dtos.CommentUpdateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentCreateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentResponse;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface TaskCommentService {
 
-    CommentResponse createComment(
+    TaskCommentResponse createComment(
             UUID taskId,
             UUID userId,
-            CommentCreateRequest request
+            TaskCommentCreateRequest request
     );
 
-    CommentResponse getCommentById(UUID commentId);
+    List<TaskCommentResponse> getTaskComments(
+            UUID taskId,
+            UUID userId
+    );
 
-    List<CommentResponse> getCommentsByTask(UUID taskId);
-
-    CommentResponse updateComment(
+    TaskCommentResponse updateComment(
             UUID commentId,
             UUID userId,
-            CommentUpdateRequest request
+            TaskCommentUpdateRequest request
     );
 
     void deleteComment(

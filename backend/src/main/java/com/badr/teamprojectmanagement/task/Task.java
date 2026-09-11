@@ -23,14 +23,6 @@ public class Task extends BaseEntity {
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to")
-    private User assignedTo;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
-
     @Column(nullable = false, length = 150)
     private String title;
 
@@ -47,6 +39,13 @@ public class Task extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TaskPriority priority = TaskPriority.MEDIUM;
 
-    @Column(name = "due_date")
     private LocalDate dueDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 }

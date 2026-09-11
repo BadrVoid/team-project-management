@@ -7,8 +7,9 @@ import java.util.UUID;
 
 public record ProjectMemberResponse(
         UUID id,
-        UUID projectId,
         UUID userId,
+        String firstName,
+        String lastName,
         ProjectMemberRole role,
         MembershipStatus status
 ) {}

@@ -7,10 +7,13 @@ import com.badr.teamprojectmanagement.project.Project;
 import com.badr.teamprojectmanagement.project.ProjectMember;
 import com.badr.teamprojectmanagement.project.ProjectMemberRepository;
 import com.badr.teamprojectmanagement.project.ProjectRepository;
+import com.badr.teamprojectmanagement.project.dtos.ProjectDetailsResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectMemberRequest;
 import com.badr.teamprojectmanagement.project.dtos.ProjectMemberResponse;
+import com.badr.teamprojectmanagement.team.dtos.TeamSummaryResponse;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
+import com.badr.teamprojectmanagement.user.dtos.UserSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -193,6 +196,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         projectMemberRepository.delete(member);
     }
 
+
     private ProjectMember findPendingMembership(
             UUID projectId,
             UUID userId
@@ -216,16 +220,15 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 );
     }
 
-    private ProjectMemberResponse mapToResponse(
-            ProjectMember member
-    ) {
-
+    private ProjectMemberResponse mapToResponse(ProjectMember member) {
         return new ProjectMemberResponse(
                 member.getId(),
-                member.getProject().getId(),
                 member.getUser().getId(),
+                member.getUser().getFirstName(),
+                member.getUser().getLastName(),
                 member.getRole(),
                 member.getStatus()
         );
+
     }
 }

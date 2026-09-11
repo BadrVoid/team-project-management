@@ -13,14 +13,37 @@ public interface ProjectJoinRequestService {
     );
 
     List<ProjectJoinRequestResponse> getProjectJoinRequests(
-            UUID projectId
+            UUID projectId,
+            UUID currentUserId
     );
 
     ProjectJoinRequestResponse acceptJoinRequest(
-            UUID requestId
+            UUID requestId,
+            UUID currentUserId
     );
 
     ProjectJoinRequestResponse rejectJoinRequest(
-            UUID requestId
+            UUID requestId,
+            UUID currentUserId
+    );
+
+    ProjectJoinRequestResponse inviteUser(
+            UUID projectId,
+            UUID userId,
+            UUID currentUserId
+    );
+
+    List<ProjectJoinRequestResponse> getMyInvitations(
+            UUID userId
+    );
+
+    ProjectJoinRequestResponse acceptInvitation(
+            UUID requestId,
+            UUID userId
+    );
+
+    ProjectJoinRequestResponse rejectInvitation(
+            UUID requestId,
+            UUID userId
     );
 }

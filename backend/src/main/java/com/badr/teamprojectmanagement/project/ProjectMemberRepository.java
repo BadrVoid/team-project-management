@@ -4,6 +4,7 @@ import com.badr.teamprojectmanagement.common.enums.MembershipStatus;
 import com.badr.teamprojectmanagement.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,5 +33,10 @@ public interface ProjectMemberRepository
             UUID projectId,
             User user,
             MembershipStatus status
+    );
+    List<ProjectMember> findByProject(Project project);
+    Optional<ProjectMember> findByProjectIdAndUserId(
+            UUID projectId,
+            UUID userId
     );
 }

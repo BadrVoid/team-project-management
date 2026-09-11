@@ -1,140 +1,130 @@
+
 package com.badr.teamprojectmanagement.task.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskCreateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskDetailsResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskUpdateRequest;
 import com.badr.teamprojectmanagement.task.service.TaskService;
+import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/teams/{teamId}/tasks")
+@RequestMapping("/api/tasks")
 @RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
 
     @PostMapping
-    public ResponseEntity<GlobalResponse<TaskResponse>> createTask(
-            @PathVariable UUID teamId,
-            @RequestParam UUID userId,
+    @ResponseStatus(HttpStatus.CREATED)
+    public GlobalResponse<TaskResponse> createTask(
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody TaskCreateRequest request
     ) {
-
         TaskResponse response =
-                taskService.createTask(
-                        teamId,
-                        userId,
-                        request
-                );
+                taskService.createTask(user.getId(), request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(GlobalResponse.success(
-                        "Task created successfully",
-                        response
-                ));
+        return GlobalResponse.success(
+                "Task created successfully",
+                response
+        );
     }
 
-    @GetMapping
-    public ResponseEntity<GlobalResponse<List<TaskResponse>>> getTasksByTeam(
+    @GetMapping("/{id}")
+    public GlobalResponse<TaskResponse> getTaskById(
+            @PathVariable UUID id
+    ) {
+        TaskResponse response =
+                taskService.getTaskById(id);
+
+        return GlobalResponse.success(
+                "Task retrieved successfully",
+                response
+        );
+    }
+
+    @GetMapping("/{id}/details")
+    public GlobalResponse<TaskDetailsResponse> getTaskDetails(
+            @PathVariable UUID id
+    ) {
+        TaskDetailsResponse response =
+                taskService.getTaskDetails(id);
+
+        return GlobalResponse.success(
+                "Task details retrieved successfully",
+                response
+        );
+    }
+
+    @GetMapping("/team/{teamId}")
+    public GlobalResponse<List<TaskResponse>> getTasksByTeam(
             @PathVariable UUID teamId
     ) {
-
         List<TaskResponse> response =
                 taskService.getTasksByTeam(teamId);
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Tasks retrieved successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Team tasks retrieved successfully",
+                response
         );
     }
 
-    @GetMapping("/{taskId}")
-    public ResponseEntity<GlobalResponse<TaskResponse>> getTaskById(
-            @PathVariable UUID taskId
+    @GetMapping("/my")
+    public GlobalResponse<List<TaskResponse>> getMyTasks(
+            @AuthenticationPrincipal User user
     ) {
+        List<TaskResponse> response =
+                taskService.getTasksByUser(user.getId());
 
-        TaskResponse response =
-                taskService.getTaskById(taskId);
-
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Task retrieved successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "My tasks retrieved successfully",
+                response
         );
     }
 
-    @PutMapping("/{taskId}")
-    public ResponseEntity<GlobalResponse<TaskResponse>> updateTask(
-            @PathVariable UUID taskId,
-            @RequestParam UUID userId,
+    @PutMapping("/{id}")
+    public GlobalResponse<TaskResponse> updateTask(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody TaskUpdateRequest request
     ) {
-
         TaskResponse response =
                 taskService.updateTask(
-                        taskId,
-                        userId,
+                        id,
+                        user.getId(),
                         request
                 );
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Task updated successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Task updated successfully",
+                response
         );
     }
 
-    @DeleteMapping("/{taskId}")
-    public ResponseEntity<GlobalResponse<Void>> deleteTask(
-            @PathVariable UUID taskId,
-            @RequestParam UUID userId
-    ) {
 
+    @DeleteMapping("/{id}")
+    public GlobalResponse<Void> deleteTask(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
+    ) {
         taskService.deleteTask(
-                taskId,
-                userId
+                id,
+                user.getId()
         );
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Task deleted successfully",
-                        null
-                )
-        );
-    }
-
-    @PatchMapping("/{taskId}/assign")
-    public ResponseEntity<GlobalResponse<TaskResponse>> assignTask(
-            @PathVariable UUID taskId,
-            @RequestParam UUID userId,
-            @RequestParam UUID assignedTo
-    ) {
-
-        TaskResponse response =
-                taskService.assignTask(
-                        taskId,
-                        userId,
-                        assignedTo
-                );
-
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Task assigned successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Task deleted successfully",
+                null
         );
     }
 }

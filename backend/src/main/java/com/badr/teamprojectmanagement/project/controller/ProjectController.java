@@ -2,6 +2,7 @@ package com.badr.teamprojectmanagement.project.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectCreateRequest;
+import com.badr.teamprojectmanagement.project.dtos.ProjectDetailsResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectUpdateRequest;
 import com.badr.teamprojectmanagement.project.service.ProjectService;
@@ -31,6 +32,19 @@ public class ProjectController {
 
         return GlobalResponse.success(
                 "Project created successfully",
+                response
+        );
+    }
+
+    @GetMapping("/{id}/details")
+    public GlobalResponse<ProjectDetailsResponse> getProjectDetails(
+            @PathVariable UUID id
+    ) {
+        ProjectDetailsResponse response =
+                projectService.getProjectDetails(id);
+
+        return GlobalResponse.success(
+                "Project details retrieved successfully",
                 response
         );
     }

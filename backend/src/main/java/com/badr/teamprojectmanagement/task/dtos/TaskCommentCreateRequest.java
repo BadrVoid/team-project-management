@@ -3,10 +3,13 @@ package com.badr.teamprojectmanagement.task.dtos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.UUID;
+public record TaskCommentCreateRequest(
 
-public record CommentCreateRequest(
         @NotBlank(message = "Comment content is required")
-        @Size(max = 2000, message = "Comment must not exceed 2000 characters")
+        @Size(
+                max = 5000,
+                message = "Comment must not exceed 5000 characters"
+        )
         String content
+
 ) {}

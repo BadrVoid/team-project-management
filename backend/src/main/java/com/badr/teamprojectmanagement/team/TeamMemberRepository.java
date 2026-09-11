@@ -26,4 +26,8 @@ public interface TeamMemberRepository
             UUID teamId,
             UUID userId
     );
+    Optional<TeamMember> findByTeamIdAndUserId(
+            UUID teamId,
+            UUID userId
+    );
 }

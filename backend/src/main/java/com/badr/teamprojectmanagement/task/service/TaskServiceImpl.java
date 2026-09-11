@@ -1,10 +1,14 @@
 package com.badr.teamprojectmanagement.task.service;
 
-import com.badr.teamprojectmanagement.exception.ForbiddenException;
+import com.badr.teamprojectmanagement.common.enums.NotificationType;
+import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
+import com.badr.teamprojectmanagement.notification.service.NotificationService;
 import com.badr.teamprojectmanagement.task.Task;
+import com.badr.teamprojectmanagement.task.TaskMapper;
 import com.badr.teamprojectmanagement.task.TaskRepository;
 import com.badr.teamprojectmanagement.task.dtos.TaskCreateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskDetailsResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskUpdateRequest;
 import com.badr.teamprojectmanagement.team.Team;
@@ -13,6 +17,7 @@ import com.badr.teamprojectmanagement.team.TeamRepository;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,233 +25,276 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TeamRepository teamRepository;
-    private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
+    private final TaskMapper taskMapper;
+    private final TeamMemberRepository teamMemberRepository;
+    private final NotificationService notificationService;
 
     @Override
     public TaskResponse createTask(
-            UUID teamId,
             UUID userId,
             TaskCreateRequest request
     ) {
 
-        Team team = findTeam(teamId);
-        User creator = findUser(userId);
+        Team team = teamRepository.findById(request.teamId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Team not found"));
 
-        checkTeamMember(teamId, userId);
+        User creator = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
 
-        User assignedUser = null;
-
-        if (request.assignedTo() != null) {
-            assignedUser = findUser(request.assignedTo());
-
-            checkTeamMember(
-                    teamId,
-                    request.assignedTo()
+        // Creator must be a team member
+        if (!teamMemberRepository.existsByTeamIdAndUserId(
+                team.getId(),
+                userId
+        )) {
+            throw new AccessDeniedException(
+                    "You must be a team member to create a task"
             );
+        }
+
+        User assignedTo = null;
+
+        if (request.assignedToId() != null) {
+
+            assignedTo = userRepository.findById(
+                    request.assignedToId()
+            ).orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Assigned user not found"
+                    ));
+
+            // Assigned user must be a member of the same team
+            if (!teamMemberRepository.existsByTeamIdAndUserId(
+                    team.getId(),
+                    request.assignedToId()
+            )) {
+                throw new AccessDeniedException(
+                        "Assigned user must be a member of the team"
+                );
+            }
         }
 
         Task task = Task.builder()
                 .team(team)
-                .createdBy(creator)
-                .assignedTo(assignedUser)
                 .title(request.title())
                 .description(request.description())
-                .status(request.status())
                 .priority(request.priority())
                 .dueDate(request.dueDate())
+                .assignedTo(assignedTo)
+                .createdBy(creator)
                 .build();
 
         Task savedTask = taskRepository.save(task);
 
-        return mapToResponse(savedTask);
+        // Notify assigned user
+        if (assignedTo != null) {
+            notificationService.createNotification(
+                    assignedTo.getId(),
+                    NotificationType.TASK_ASSIGNED,
+                    "You have been assigned a new task: "
+                            + savedTask.getTitle()
+            );
+        }
+
+        return taskMapper.toResponse(savedTask);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TaskResponse getTaskById(UUID taskId) {
+    public TaskResponse getTaskById(UUID id) {
+        Task task = findTask(id);
+        return taskMapper.toResponse(task);
+    }
 
-        Task task = findTask(taskId);
-
-        return mapToResponse(task);
+    @Override
+    @Transactional(readOnly = true)
+    public TaskDetailsResponse getTaskDetails(UUID id) {
+        Task task = findTask(id);
+        return taskMapper.toDetailsResponse(task);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TaskResponse> getTasksByTeam(UUID teamId) {
 
-        findTeam(teamId);
+        if (!teamRepository.existsById(teamId)) {
+            throw new ResourceNotFoundException("Team not found");
+        }
 
-        return taskRepository.findAllByTeamId(teamId)
+        return taskRepository.findByTeamId(teamId)
                 .stream()
-                .map(this::mapToResponse)
+                .map(taskMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getTasksByUser(UUID userId) {
+
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        return taskRepository.findByAssignedToId(userId)
+                .stream()
+                .map(taskMapper::toResponse)
                 .toList();
     }
 
     @Override
     public TaskResponse updateTask(
-            UUID taskId,
+            UUID id,
             UUID userId,
             TaskUpdateRequest request
     ) {
 
-        Task task = findTask(taskId);
+        Task task = findTask(id);
 
-        UUID teamId = task.getTeam().getId();
+        authorizeTaskUpdate(task, userId);
 
-        checkTeamMember(teamId, userId);
+        User assignedTo = null;
 
-        if (request.title() != null) {
-            task.setTitle(request.title());
+        if (request.assignedToId() != null) {
+
+            assignedTo = userRepository.findById(
+                    request.assignedToId()
+            ).orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Assigned user not found"
+                    ));
+
+            // Assigned user must belong to the same team
+            if (!teamMemberRepository.existsByTeamIdAndUserId(
+                    task.getTeam().getId(),
+                    request.assignedToId()
+            )) {
+                throw new AccessDeniedException(
+                        "Assigned user must be a member of the team"
+                );
+            }
         }
+        User oldAssignedTo = task.getAssignedTo();
+        task.setTitle(request.title());
+        task.setDescription(request.description());
+        task.setStatus(request.status());
+        task.setPriority(request.priority());
+        task.setDueDate(request.dueDate());
+        task.setAssignedTo(assignedTo);
+        if (assignedTo != null) {
 
-        if (request.description() != null) {
-            task.setDescription(request.description());
+            boolean assigneeChanged =
+                    oldAssignedTo == null
+                            || !oldAssignedTo.getId().equals(assignedTo.getId());
+
+            if (assigneeChanged) {
+
+                notificationService.createNotification(
+                        assignedTo.getId(),
+                        NotificationType.TASK_ASSIGNED,
+                        "You have been assigned a task: "
+                                + task.getTitle()
+                );
+
+            } else if (!assignedTo.getId().equals(userId)) {
+
+                notificationService.createNotification(
+                        assignedTo.getId(),
+                        NotificationType.TASK_UPDATED,
+                        "Your assigned task was updated: "
+                                + task.getTitle()
+                );
+            }
         }
-
-        if (request.status() != null) {
-            task.setStatus(request.status());
-        }
-
-        if (request.priority() != null) {
-            task.setPriority(request.priority());
-        }
-
-        if (request.dueDate() != null) {
-            task.setDueDate(request.dueDate());
-        }
-
-        if (request.assignedTo() != null) {
-
-            checkTeamMember(
-                    teamId,
-                    request.assignedTo()
-            );
-
-            User assignedUser = findUser(request.assignedTo());
-
-            task.setAssignedTo(assignedUser);
-        }
-
-        Task updatedTask = taskRepository.save(task);
-
-        return mapToResponse(updatedTask);
+        return taskMapper.toResponse(task);
     }
 
     @Override
-    public void deleteTask(
-            UUID taskId,
-            UUID userId
-    ) {
+    public void deleteTask(UUID id, UUID userId) {
 
-        Task task = findTask(taskId);
+        Task task = findTask(id);
 
-        checkTeamMember(
-                task.getTeam().getId(),
-                userId
-        );
+        authorizeTaskManagement(task, userId);
 
         taskRepository.delete(task);
     }
 
-    @Override
-    public TaskResponse assignTask(
-            UUID taskId,
-            UUID userId,
-            UUID assignedTo
-    ) {
+    private Task findTask(UUID id) {
 
-        Task task = findTask(taskId);
-
-        UUID teamId = task.getTeam().getId();
-
-        checkTeamMember(teamId, userId);
-        checkTeamMember(teamId, assignedTo);
-
-        User assignedUser = findUser(assignedTo);
-
-        task.setAssignedTo(assignedUser);
-
-        Task savedTask = taskRepository.save(task);
-
-        return mapToResponse(savedTask);
-    }
-
-    private Task findTask(UUID taskId) {
-
-        return taskRepository.findById(taskId)
+        return taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Task not found")
-                );
+                        new ResourceNotFoundException("Task not found"));
     }
 
-    private Team findTeam(UUID teamId) {
-
-        return teamRepository.findById(teamId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Team not found")
-                );
-    }
-
-    private User findUser(UUID userId) {
-
-        return userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found")
-                );
-    }
-
-    private void checkTeamMember(
-            UUID teamId,
+    private void authorizeTaskUpdate(
+            Task task,
             UUID userId
     ) {
 
-        boolean isMember =
-                teamMemberRepository.existsByTeamIdAndUserId(
-                        teamId,
+        boolean isCreator =
+                task.getCreatedBy()
+                        .getId()
+                        .equals(userId);
+
+        boolean isAssignedUser =
+                task.getAssignedTo() != null
+                        && task.getAssignedTo()
+                        .getId()
+                        .equals(userId);
+
+        boolean isTeamLeader =
+                isTeamLeader(
+                        task.getTeam().getId(),
                         userId
                 );
 
-        if (!isMember) {
-            throw new ForbiddenException(
-                    "User is not a member of this team"
+        if (!isCreator && !isAssignedUser && !isTeamLeader) {
+            throw new AccessDeniedException(
+                    "You are not allowed to update this task"
             );
         }
     }
 
-    private TaskResponse mapToResponse(Task task) {
+    private void authorizeTaskManagement(
+            Task task,
+            UUID userId
+    ) {
 
-        UUID projectId = null;
+        boolean isCreator =
+                task.getCreatedBy()
+                        .getId()
+                        .equals(userId);
 
-        if (task.getTeam() != null &&
-                task.getTeam().getProject() != null) {
+        boolean isTeamLeader =
+                isTeamLeader(
+                        task.getTeam().getId(),
+                        userId
+                );
 
-            projectId = task.getTeam()
-                    .getProject()
-                    .getId();
+        if (!isCreator && !isTeamLeader) {
+            throw new AccessDeniedException(
+                    "You are not allowed to manage this task"
+            );
         }
+    }
 
-        UUID assignedTo = null;
+    private boolean isTeamLeader(
+            UUID teamId,
+            UUID userId
+    ) {
 
-        if (task.getAssignedTo() != null) {
-            assignedTo = task.getAssignedTo().getId();
-        }
-
-        return new TaskResponse(
-                task.getId(),
-                task.getTitle(),
-                task.getDescription(),
-                task.getStatus(),
-                task.getPriority(),
-                task.getDueDate(),
-                projectId,
-                assignedTo
-        );
+        return teamMemberRepository
+                .findByTeamIdAndUserId(teamId, userId)
+                .map(member ->
+                        member.getRole() == TeamMemberRole.LEADER
+                )
+                .orElse(false);
     }
 }

@@ -1,6 +1,7 @@
 package com.badr.teamprojectmanagement.project.service;
 
 import com.badr.teamprojectmanagement.project.dtos.ProjectCreateRequest;
+import com.badr.teamprojectmanagement.project.dtos.ProjectDetailsResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectUpdateRequest;
 
@@ -12,6 +13,8 @@ public interface ProjectService {
     ProjectResponse createProject(UUID userId, ProjectCreateRequest request);
 
     ProjectResponse getProjectById(UUID id);
+
+    ProjectDetailsResponse getProjectDetails(UUID id);
 
     List<ProjectResponse> getProjectsBySpace(UUID spaceId);
 

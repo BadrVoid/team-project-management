@@ -2,14 +2,17 @@ package com.badr.teamprojectmanagement.project.service;
 
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.project.Project;
+import com.badr.teamprojectmanagement.project.ProjectMapper;
+import com.badr.teamprojectmanagement.project.ProjectMemberRepository;
 import com.badr.teamprojectmanagement.project.ProjectRepository;
-import com.badr.teamprojectmanagement.project.dtos.ProjectCreateRequest;
-import com.badr.teamprojectmanagement.project.dtos.ProjectResponse;
-import com.badr.teamprojectmanagement.project.dtos.ProjectUpdateRequest;
+import com.badr.teamprojectmanagement.project.dtos.*;
 import com.badr.teamprojectmanagement.space.Space;
 import com.badr.teamprojectmanagement.space.SpaceRepository;
+import com.badr.teamprojectmanagement.team.TeamRepository;
+import com.badr.teamprojectmanagement.team.dtos.TeamSummaryResponse;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
+import com.badr.teamprojectmanagement.user.dtos.UserSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,9 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final SpaceRepository spaceRepository;
     private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
+    private final ProjectMemberRepository projectMemberRepository;
+    private final ProjectMapper projectMapper;
 
     @Override
     public ProjectResponse createProject(
@@ -125,6 +131,32 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectDetailsResponse getProjectDetails(UUID id) {
+
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Project not found"));
+
+        List<ProjectMemberResponse> members =
+                projectMemberRepository.findByProject(project)
+                        .stream()
+                        .map(projectMapper::toMemberResponse)
+                        .toList();
+
+        List<TeamSummaryResponse> teams =
+                teamRepository.findByProjectId(project.getId())
+                        .stream()
+                        .map(projectMapper::toTeamSummaryResponse)
+                        .toList();
+
+        return projectMapper.toDetailsResponse(
+                project,
+                members,
+                teams
+        );
+    }
     private ProjectResponse mapToResponse(Project project) {
 
         return new ProjectResponse(

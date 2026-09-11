@@ -19,17 +19,14 @@ public class Notification extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 150)
-    private String title;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String message;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private NotificationType type;
 
+    @Column(nullable = false, length = 255)
+    private String message;
+
     @Builder.Default
-    @Column(name = "is_read", nullable = false)
+    @Column(nullable = false)
     private boolean read = false;
 }

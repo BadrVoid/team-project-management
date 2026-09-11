@@ -1,18 +1,22 @@
 package com.badr.teamprojectmanagement.task.service;
 
-import com.badr.teamprojectmanagement.exception.ForbiddenException;
+import com.badr.teamprojectmanagement.common.enums.NotificationType;
+import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
+import com.badr.teamprojectmanagement.notification.service.NotificationService;
 import com.badr.teamprojectmanagement.task.Task;
 import com.badr.teamprojectmanagement.task.TaskComment;
 import com.badr.teamprojectmanagement.task.TaskCommentRepository;
+import com.badr.teamprojectmanagement.task.TaskMapper;
 import com.badr.teamprojectmanagement.task.TaskRepository;
-import com.badr.teamprojectmanagement.task.dtos.CommentCreateRequest;
-import com.badr.teamprojectmanagement.task.dtos.CommentResponse;
-import com.badr.teamprojectmanagement.task.dtos.CommentUpdateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentCreateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentResponse;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentUpdateRequest;
 import com.badr.teamprojectmanagement.team.TeamMemberRepository;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,29 +24,26 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional
 public class TaskCommentServiceImpl implements TaskCommentService {
 
     private final TaskCommentRepository taskCommentRepository;
     private final TaskRepository taskRepository;
-    private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
-
+    private final TeamMemberRepository teamMemberRepository;
+    private final TaskMapper taskMapper;
+    private final NotificationService notificationService;
     @Override
-    public CommentResponse createComment(
+    public TaskCommentResponse createComment(
             UUID taskId,
             UUID userId,
-            CommentCreateRequest request
-    ) {
+            TaskCommentCreateRequest request) {
 
         Task task = findTask(taskId);
         User user = findUser(userId);
 
-        checkTeamMember(
-                task.getTeam().getId(),
-                userId
-        );
+        verifyTeamMember(task, userId);
 
         TaskComment comment = TaskComment.builder()
                 .task(task)
@@ -50,60 +51,66 @@ public class TaskCommentServiceImpl implements TaskCommentService {
                 .content(request.content())
                 .build();
 
-        TaskComment savedComment =
-                taskCommentRepository.save(comment);
+        TaskComment savedComment = taskCommentRepository.save(comment);
 
-        return mapToResponse(savedComment);
+        // Notify task creator
+        if (!task.getCreatedBy().getId().equals(userId)) {
+            notificationService.createNotification(
+                    task.getCreatedBy().getId(),
+                    NotificationType.TASK_COMMENTED,
+                    user.getFirstName() + " " + user.getLastName()
+                            + " commented on your task: " + task.getTitle()
+            );
+        }
+
+        // Notify assigned user
+        if (task.getAssignedTo() != null
+                && !task.getAssignedTo().getId().equals(userId)
+                && !task.getAssignedTo().getId().equals(task.getCreatedBy().getId())) {
+
+            notificationService.createNotification(
+                    task.getAssignedTo().getId(),
+                    NotificationType.TASK_COMMENTED,
+                    user.getFirstName() + " " + user.getLastName()
+                            + " commented on your assigned task: " + task.getTitle()
+            );
+        }
+
+        return taskMapper.toCommentResponse(savedComment);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CommentResponse getCommentById(UUID commentId) {
-
-        TaskComment comment = findComment(commentId);
-
-        return mapToResponse(comment);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CommentResponse> getCommentsByTask(UUID taskId) {
+    public List<TaskCommentResponse> getTaskComments(
+            UUID taskId,
+            UUID userId
+    ) {
 
         Task task = findTask(taskId);
 
+        verifyTeamMember(task, userId);
+
         return taskCommentRepository
-                .findAllByTaskIdOrderByCreatedAtAsc(task.getId())
+                .findByTaskIdOrderByCreatedAtAsc(task.getId())
                 .stream()
-                .map(this::mapToResponse)
+                .map(taskMapper::toCommentResponse)
                 .toList();
     }
 
     @Override
-    public CommentResponse updateComment(
+    public TaskCommentResponse updateComment(
             UUID commentId,
             UUID userId,
-            CommentUpdateRequest request
+            TaskCommentUpdateRequest request
     ) {
 
         TaskComment comment = findComment(commentId);
 
-        checkTeamMember(
-                comment.getTask().getTeam().getId(),
-                userId
-        );
-
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new ForbiddenException(
-                    "You can only update your own comment"
-            );
-        }
+        verifyCommentOwner(comment, userId);
 
         comment.setContent(request.content());
 
-        TaskComment updatedComment =
-                taskCommentRepository.save(comment);
-
-        return mapToResponse(updatedComment);
+        return taskMapper.toCommentResponse(comment);
     }
 
     @Override
@@ -114,14 +121,18 @@ public class TaskCommentServiceImpl implements TaskCommentService {
 
         TaskComment comment = findComment(commentId);
 
-        checkTeamMember(
-                comment.getTask().getTeam().getId(),
-                userId
-        );
+        boolean isOwner =
+                comment.getUser().getId().equals(userId);
 
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new ForbiddenException(
-                    "You can only delete your own comment"
+        boolean isTeamLeader =
+                isTeamLeader(
+                        comment.getTask().getTeam().getId(),
+                        userId
+                );
+
+        if (!isOwner && !isTeamLeader) {
+            throw new AccessDeniedException(
+                    "You are not allowed to delete this comment"
             );
         }
 
@@ -129,66 +140,69 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     }
 
     private Task findTask(UUID taskId) {
-
         return taskRepository.findById(taskId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Task not found"
-                        )
-                );
+                        ));
     }
 
     private TaskComment findComment(UUID commentId) {
-
         return taskCommentRepository.findById(commentId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Comment not found"
-                        )
-                );
+                        ));
     }
 
     private User findUser(UUID userId) {
-
         return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "User not found"
-                        )
-                );
+                        ));
     }
 
-    private void checkTeamMember(
-            UUID teamId,
+    private void verifyTeamMember(
+            Task task,
             UUID userId
     ) {
 
         boolean isMember =
                 teamMemberRepository.existsByTeamIdAndUserId(
-                        teamId,
+                        task.getTeam().getId(),
                         userId
                 );
 
         if (!isMember) {
-            throw new ForbiddenException(
-                    "User is not a member of this team"
+            throw new AccessDeniedException(
+                    "You must be a team member to access this task's comments"
             );
         }
     }
 
-    private CommentResponse mapToResponse(
-            TaskComment comment
+    private void verifyCommentOwner(
+            TaskComment comment,
+            UUID userId
     ) {
 
-        return new CommentResponse(
-                comment.getId(),
-                comment.getTask().getId(),
-                comment.getUser().getId(),
-                comment.getUser().getFirstName(),
-                comment.getUser().getLastName(),
-                comment.getContent(),
-                comment.getCreatedAt(),
-                comment.getUpdatedAt()
-        );
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException(
+                    "You can only edit your own comments"
+            );
+        }
+    }
+
+    private boolean isTeamLeader(
+            UUID teamId,
+            UUID userId
+    ) {
+
+        return teamMemberRepository
+                .findByTeamIdAndUserId(teamId, userId)
+                .map(member ->
+                        member.getRole() == TeamMemberRole.LEADER
+                )
+                .orElse(false);
     }
 }

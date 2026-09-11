@@ -1,14 +1,15 @@
 package com.badr.teamprojectmanagement.task.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
-import com.badr.teamprojectmanagement.task.dtos.CommentCreateRequest;
-import com.badr.teamprojectmanagement.task.dtos.CommentResponse;
-import com.badr.teamprojectmanagement.task.dtos.CommentUpdateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentCreateRequest;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentResponse;
+import com.badr.teamprojectmanagement.task.dtos.TaskCommentUpdateRequest;
 import com.badr.teamprojectmanagement.task.service.TaskCommentService;
+import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,99 +23,80 @@ public class TaskCommentController {
     private final TaskCommentService taskCommentService;
 
     @PostMapping
-    public ResponseEntity<GlobalResponse<CommentResponse>> createComment(
+    @ResponseStatus(HttpStatus.CREATED)
+    public GlobalResponse<TaskCommentResponse> createComment(
             @PathVariable UUID taskId,
-            @RequestParam UUID userId,
-            @Valid @RequestBody CommentCreateRequest request
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody TaskCommentCreateRequest request
     ) {
 
-        CommentResponse response =
+        TaskCommentResponse response =
                 taskCommentService.createComment(
                         taskId,
-                        userId,
+                        user.getId(),
                         request
                 );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        GlobalResponse.success(
-                                "Comment created successfully",
-                                response
-                        )
-                );
-    }
-
-    @GetMapping
-    public ResponseEntity<GlobalResponse<List<CommentResponse>>> getComments(
-            @PathVariable UUID taskId
-    ) {
-
-        List<CommentResponse> response =
-                taskCommentService.getCommentsByTask(taskId);
-
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Comments retrieved successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Comment created successfully",
+                response
         );
     }
 
-    @GetMapping("/{commentId}")
-    public ResponseEntity<GlobalResponse<CommentResponse>> getCommentById(
-            @PathVariable UUID commentId
+    @GetMapping
+    public GlobalResponse<List<TaskCommentResponse>> getTaskComments(
+            @PathVariable UUID taskId,
+            @AuthenticationPrincipal User user
     ) {
 
-        CommentResponse response =
-                taskCommentService.getCommentById(commentId);
+        List<TaskCommentResponse> response =
+                taskCommentService.getTaskComments(
+                        taskId,
+                        user.getId()
+                );
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Comment retrieved successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Task comments retrieved successfully",
+                response
         );
     }
 
     @PutMapping("/{commentId}")
-    public ResponseEntity<GlobalResponse<CommentResponse>> updateComment(
+    public GlobalResponse<TaskCommentResponse> updateComment(
+            @PathVariable UUID taskId,
             @PathVariable UUID commentId,
-            @RequestParam UUID userId,
-            @Valid @RequestBody CommentUpdateRequest request
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody TaskCommentUpdateRequest request
     ) {
 
-        CommentResponse response =
+        TaskCommentResponse response =
                 taskCommentService.updateComment(
                         commentId,
-                        userId,
+                        user.getId(),
                         request
                 );
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Comment updated successfully",
-                        response
-                )
+        return GlobalResponse.success(
+                "Comment updated successfully",
+                response
         );
     }
 
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<GlobalResponse<Void>> deleteComment(
+    public GlobalResponse<Void> deleteComment(
+            @PathVariable UUID taskId,
             @PathVariable UUID commentId,
-            @RequestParam UUID userId
+            @AuthenticationPrincipal User user
     ) {
 
         taskCommentService.deleteComment(
                 commentId,
-                userId
+                user.getId()
         );
 
-        return ResponseEntity.ok(
-                GlobalResponse.success(
-                        "Comment deleted successfully",
-                        null
-                )
+        return GlobalResponse.success(
+                "Comment deleted successfully",
+                null
         );
     }
 }
