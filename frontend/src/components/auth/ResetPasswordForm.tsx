@@ -116,7 +116,7 @@ export function ResetPasswordForm({
 
             <button
               type="button"
-              onClick={() => setPassword((value) => !value)}
+              onClick={() => setShowPassword((value) => !value)}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
               {showPassword ? (

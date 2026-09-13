@@ -1,4 +1,10 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 type AuthContextType = {
   accessToken: string | null;
@@ -30,21 +36,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getStoredToken(REFRESH_TOKEN_KEY),
   );
 
-  const login = (
-    newAccessToken: string,
-    newRefreshToken: string,
-    rememberMe: boolean,
-  ) => {
-    const storage = rememberMe ? localStorage : sessionStorage;
+  const login = useCallback(
+    (newAccessToken: string, newRefreshToken: string, rememberMe: boolean) => {
+      // Clear old tokens first
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
 
-    storage.setItem(ACCESS_TOKEN_KEY, newAccessToken);
-    storage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 
-    setAccessToken(newAccessToken);
-    setRefreshToken(newRefreshToken);
-  };
+      const storage = rememberMe ? localStorage : sessionStorage;
 
-  const logout = () => {
+      storage.setItem(ACCESS_TOKEN_KEY, newAccessToken);
+      storage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+
+      setAccessToken(newAccessToken);
+      setRefreshToken(newRefreshToken);
+    },
+    [],
+  );
+
+  const logout = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
 
@@ -53,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setAccessToken(null);
     setRefreshToken(null);
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -63,12 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
     }),
-    [accessToken, refreshToken],
+    [accessToken, refreshToken, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
 

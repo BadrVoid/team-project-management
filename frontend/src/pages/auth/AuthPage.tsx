@@ -1,5 +1,5 @@
 import { AuthCard } from "@/components/auth/AuthCard";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components/common/Logo";
 
 export default function AuthPage() {
   return (

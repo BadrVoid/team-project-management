@@ -84,32 +84,41 @@ export function AuthCard() {
 
         {/* Side panel */}
         <div
-          className={`absolute inset-y-0 right-0 z-20 flex w-1/2 items-center justify-center bg-secondary p-10 text-secondary-foreground transition-transform duration-700 ease-in-out ${
+          className={`absolute inset-y-0 right-0 z-20 w-1/2 overflow-hidden transition-transform duration-700 ease-in-out ${
             isRegister ? "-translate-x-full" : "translate-x-0"
           }`}
         >
-          <div className="max-w-sm text-center">
-            <h2 className="text-4xl font-semibold">
-              {isRegister ? "Welcome back" : "New here?"}
-            </h2>
+          Background image
+          <img
+            src="/first.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/60" />
+          {/* Content */}
+          <div className="relative z-10 flex h-full items-center justify-center p-10 text-white">
+            <div className="max-w-sm text-center">
+              <h2 className="text-4xl font-semibold">
+                {isRegister ? "Welcome back" : "New here?"}
+              </h2>
+              <p className="mt-4 text-white/90">
+                {isRegister
+                  ? "Already have an account? Sign in to continue."
+                  : "Create an account and get started."}
+              </p>
 
-            <p className="mt-4 text-secondary-foreground/70">
-              {isRegister
-                ? "Already have an account? Sign in and continue managing your projects."
-                : "Create an account and start managing your projects and teams."}
-            </p>
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setView(isRegister ? "login" : "register")}
-              className="mt-6 bg-transparent px-8 text-secondary-foreground hover:bg-secondary-foreground/10 hover:text-secondary-foreground"
-            >
-              {isRegister ? "Sign in" : "Create account"}
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setView(isRegister ? "login" : "register")}
+                className="mt-6 bg-transparent px-8 text-white hover:bg-white/10 hover:text-white"
+              >
+                {isRegister ? "Sign in" : "Create account"}
+              </Button>
+            </div>
           </div>
         </div>
-
         {/* Forgot / OTP / Reset */}
         {(view === "forgot" || view === "otp" || view === "reset") && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-card p-10">

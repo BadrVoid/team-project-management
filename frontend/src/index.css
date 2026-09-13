@@ -5,32 +5,32 @@
    ========================================================= */
 
 @font-face {
-  font-family: 'Oswald';
-  src: url('./assets/fonts/Oswald-Regular.ttf') format('truetype');
+  font-family: "Oswald";
+  src: url("./assets/fonts/Oswald-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Oswald';
-  src: url('./assets/fonts/Oswald-Medium.ttf') format('truetype');
+  font-family: "Oswald";
+  src: url("./assets/fonts/Oswald-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Oswald';
-  src: url('./assets/fonts/Oswald-SemiBold.ttf') format('truetype');
+  font-family: "Oswald";
+  src: url("./assets/fonts/Oswald-SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Oswald';
-  src: url('./assets/fonts/Oswald-Bold.ttf') format('truetype');
+  font-family: "Oswald";
+  src: url("./assets/fonts/Oswald-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -41,42 +41,37 @@
 :root {
   /* Font — Updated to use Oswald with fallback */
   --font-sans:
-    'Oswald', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    "Oswald", -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   /* THEME 1 — CORAL / NAVY */
+  --background: #f4f7f2;
+  --foreground: #17231b;
 
-  --background: #f5ebdd;
-  --foreground: #413333;
+  --card: #ffffff;
+  --card-foreground: #17231b;
 
-  --card: #fffaf4;
-  --card-foreground: #413333;
-
-  --primary: #f2765e;
+  --primary: #3f7d5a;
   --primary-foreground: #ffffff;
 
-  --secondary: #315b8c;
-  --secondary-foreground: #ffffff;
+  --secondary: #dce9df;
+  --secondary-foreground: #294735;
 
-  --muted: #eadfd2;
-  --muted-foreground: #725f5f;
+  --muted: #e8eee9;
+  --muted-foreground: #68776d;
 
-  --accent: #315b8c;
-  --accent-foreground: #ffffff;
+  --accent: #c7dfcf;
+  --accent-foreground: #23432f;
 
-  --border: #dccfc1;
-  --input: #dccfc1;
-  --ring: #f2765e;
+  --border: #d5dfd7;
+  --input: #d5dfd7;
 
-  --destructive: #dc2626;
+  --ring: #3f7d5a;
+
+  --destructive: #dc4c4c;
   --destructive-foreground: #ffffff;
 }
-
-/* =========================================================
-   THEME 2 — DARK GREEN
-   ========================================================= */
-
-[data-theme="darkgreen"] {
+[data-theme="dark"] {
   --background: #0b0909;
   --foreground: #f3f5f4;
 
@@ -101,37 +96,6 @@
 
   --destructive: #e63946;
   --destructive-foreground: #ffffff;
-}
-
-/* =========================================================
-   THEME 3 — DEEP PURPLE / CYAN
-   ========================================================= */
-
-[data-theme="purple"] {
-  --background: #160628;
-  --foreground: #ffe53d;
-
-  --card: #1d0934;
-  --card-foreground: #ffe53d;
-
-  --primary: #56077c;
-  --primary-foreground: #ffffff;
-
-  --secondary: #331b4d;
-  --secondary-foreground: #ffffff;
-
-  --muted: #28103f;
-  --muted-foreground: #c4a9d2;
-
-  --accent: #00e0d1;
-  --accent-foreground: #1a2333;
-
-  --border: #43205d;
-  --input: #43205d;
-  --ring: #00e0d1;
-
-  --destructive: #00e0d1;
-  --destructive-foreground: #1a2333;
 }
 
 /* TAILWIND THEME TOKENS */
