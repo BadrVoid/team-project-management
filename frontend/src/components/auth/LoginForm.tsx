@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useLogin } from "@/components/auth/hooks/auth.hooks";
+import { useLogin } from "@/hooks/auth.hooks";
 import { useAuth } from "@/context/AuthContext";
 
 type LoginFormProps = {
@@ -71,7 +71,7 @@ export function LoginForm({ onRegister, onForgotPassword }: LoginFormProps) {
       },
       {
         onSuccess: (response) => {
-          const { accessToken, refreshToken } = response.data.data;
+          const { accessToken, refreshToken } = response;
 
           login(accessToken, refreshToken, rememberMe);
 

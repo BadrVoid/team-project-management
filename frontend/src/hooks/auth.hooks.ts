@@ -1,6 +1,8 @@
+// src/hooks/useAuth.ts
+
 import { useMutation } from "@tanstack/react-query";
 
-import { authApi } from "../api/auth.api";
+import { authApi } from "@/api/auth.api";
 
 export function useLogin() {
   return useMutation({

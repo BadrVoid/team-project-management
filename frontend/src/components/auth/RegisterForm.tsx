@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-import { useRegister } from "@/components/auth/hooks/auth.hooks";
+import { useRegister } from "@/hooks/auth.hooks";
 
 type RegisterFormProps = {
   onVerify: (email: string) => void;

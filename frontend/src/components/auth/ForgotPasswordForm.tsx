@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useForgotPassword } from "@/components/auth/hooks/auth.hooks";
+import { useForgotPassword } from "@/hooks/auth.hooks";
 
 type ForgotPasswordFormProps = {
   onBack: () => void;
