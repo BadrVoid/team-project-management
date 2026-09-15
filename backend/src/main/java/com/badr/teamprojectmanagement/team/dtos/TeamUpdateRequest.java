@@ -11,5 +11,4 @@ public record TeamUpdateRequest(
 
         @Size(max = 500, message = "Description must not exceed 500 characters")
         String description
-) {
-}
+) {}

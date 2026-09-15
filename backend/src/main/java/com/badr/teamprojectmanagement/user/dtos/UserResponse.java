@@ -16,6 +16,7 @@ public record UserResponse(
 
         UserRole role,
 
-        boolean emailVerified
+        boolean emailVerified,
+        boolean banned
 ) {
 }

@@ -28,9 +28,9 @@ public class Project extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    @Builder.Default
     private ProjectStatus status = ProjectStatus.PLANNING;
 
     private LocalDate startDate;

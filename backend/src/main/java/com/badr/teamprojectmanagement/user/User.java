@@ -1,7 +1,9 @@
+
 package com.badr.teamprojectmanagement.user;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
 import com.badr.teamprojectmanagement.common.enums.UserRole;
+import com.badr.teamprojectmanagement.user.profile.UserProfile;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,9 +30,22 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private UserRole role;
+    @Builder.Default
+    private UserRole role = UserRole.USER;
 
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private boolean verified = false;
+
+    @Column(name = "is_banned", nullable = false)
+    @Builder.Default
+    private boolean banned = false;
+
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY
+    )
+    private UserProfile profile;
 }
+

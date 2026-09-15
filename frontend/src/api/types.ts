@@ -1,0 +1,208 @@
+// src/api/types.ts
+
+// =========================
+// Global Response
+// =========================
+
+export interface GlobalResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+// =========================
+// Auth
+// =========================
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface RefreshRequest {
+  refreshToken: string;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+// =========================
+// User
+// =========================
+
+export type UserRole = "USER" | "ADMIN";
+
+export interface UserSummaryResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface UserResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  verified: boolean;
+  banned: boolean;
+}
+
+// =========================
+// Space
+// =========================
+
+export interface SpaceResponse {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+}
+
+// =========================
+// Project
+// =========================
+
+export type ProjectStatus =
+  | "PLANNING"
+  | "ACTIVE"
+  | "COMPLETED"
+  | "ARCHIVED";
+
+export interface ProjectResponse {
+  id: string;
+  spaceId: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  startDate: string | null;
+  endDate: string | null;
+  createdBy: string;
+}
+
+export interface ProjectMemberResponse {
+  user: UserSummaryResponse;
+  role: "OWNER" | "MANAGER" | "MEMBER";
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
+}
+
+export interface TeamSummaryResponse {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface ProjectDetailsResponse {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  startDate: string | null;
+  endDate: string | null;
+  createdBy: UserSummaryResponse;
+  members: ProjectMemberResponse[];
+  teams: TeamSummaryResponse[];
+}
+
+// =========================
+// Team
+// =========================
+
+export interface TeamResponse {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string;
+}
+
+export interface TeamMemberResponse {
+  user: UserSummaryResponse;
+  role: "LEADER" | "MEMBER";
+}
+
+// =========================
+// Task
+// =========================
+
+export type TaskStatus =
+  | "TODO"
+  | "IN_PROGRESS"
+  | "IN_REVIEW"
+  | "COMPLETED";
+
+export type TaskPriority =
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH"
+  | "URGENT";
+
+export interface TaskResponse {
+  id: string;
+  teamId: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string | null;
+  assignedTo: string | null;
+  createdBy: string;
+}
+
+export interface TaskDetailsResponse {
+  id: string;
+  teamId: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string | null;
+  assignedTo: UserSummaryResponse | null;
+  createdBy: UserSummaryResponse;
+}
+
+// =========================
+// Notification
+// =========================
+
+export type NotificationType =
+  | "TASK_ASSIGNED"
+  | "TASK_UPDATED"
+  | "TASK_COMMENTED"
+  | "PROJECT_INVITATION"
+  | "TEAM_INVITATION"
+  | "SYSTEM";
+
+export interface NotificationResponse {
+  id: string;
+  type: NotificationType;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}

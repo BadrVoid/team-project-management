@@ -1,5 +1,6 @@
 package com.badr.teamprojectmanagement.auth.otp;
 
+import com.badr.teamprojectmanagement.common.email.EmailService;
 import com.badr.teamprojectmanagement.common.enums.OtpType;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.user.User;
@@ -20,70 +21,102 @@ public class OtpServiceImpl implements OtpService {
 
     private final OtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public void generateAndSendOtp(User user, OtpType type) {
 
-        //Check if there is an existing active OTP
+        // Check if there is an existing active OTP
         var existingOtp = otpRepository
-                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(user, type);
+                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(
+                        user,
+                        type
+                );
 
-        //Check if the resend cooldown is still active
+        // Check resend cooldown
         if (existingOtp.isPresent()) {
 
             Otp otp = existingOtp.get();
 
             LocalDateTime cooldownTime =
-                    otp.getCreatedAt().plusSeconds(RESEND_COOLDOWN_SECONDS);
+                    otp.getCreatedAt()
+                            .plusSeconds(RESEND_COOLDOWN_SECONDS);
 
             if (LocalDateTime.now().isBefore(cooldownTime)) {
                 throw new BadRequestException(
-                        "Please wait before requesting a new OTP");
+                        "Please wait before requesting a new OTP"
+                );
             }
         }
 
-        //Invalidate the previous OTP before creating a new one
+        // Invalidate previous OTP
         invalidatePreviousOtp(user, type);
 
-        //Generate a new OTP
+        // Generate a new OTP
         String otpCode = generateOtp();
 
-        //Hash the OTP before storing it in the database
+        // Hash OTP before storing it
         String otpHash = passwordEncoder.encode(otpCode);
 
-        //Create the new OTP
+        // Create OTP entity
         Otp otp = Otp.builder()
                 .user(user)
                 .otpHash(otpHash)
                 .type(type)
-                .expiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES))
+                .expiresAt(
+                        LocalDateTime.now()
+                                .plusMinutes(OTP_EXPIRATION_MINUTES)
+                )
                 .used(false)
                 .attempts(0)
                 .build();
 
-        //Save the OTP in the database
+        // Save OTP
         otpRepository.save(otp);
+
+        // Send the ORIGINAL OTP by email
+        emailService.sendOtp(
+                user.getEmail(),
+                otpCode,
+                type
+        );
     }
 
     @Override
-    public void verifyOtp(User user, OtpType type, String otp) {
+    public void verifyOtp(
+            User user,
+            OtpType type,
+            String otp
+    ) {
+
         Otp savedOtp = otpRepository
-                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
+                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(
+                        user,
+                        type
+                )
                 .orElseThrow(() ->
-                        new BadRequestException("Invalid or expired OTP")
+                        new BadRequestException(
+                                "Invalid or expired OTP"
+                        )
                 );
 
-        //Check it is still valid or expired [By Time]
-        if (savedOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+        // Check expiration
+        if (savedOtp.getExpiresAt()
+                .isBefore(LocalDateTime.now())) {
+
             savedOtp.setUsed(true);
             otpRepository.save(savedOtp);
 
-            throw new BadRequestException("OTP has expired");
+            throw new BadRequestException(
+                    "OTP has expired"
+            );
         }
-        //Check it is still valid or expired [By Attempts]
+
+        // Check maximum attempts
         if (savedOtp.getAttempts() >= MAX_ATTEMPTS) {
+
             savedOtp.setUsed(true);
             otpRepository.save(savedOtp);
 
@@ -91,24 +124,45 @@ public class OtpServiceImpl implements OtpService {
                     "Maximum OTP attempts exceeded"
             );
         }
-        //Increase the attempts each verify
-        savedOtp.setAttempts(savedOtp.getAttempts() + 1);
 
-        //Check it is still valid or invalid
-        if (!passwordEncoder.matches(otp, savedOtp.getOtpHash())) {
+        // Increase attempts
+        savedOtp.setAttempts(
+                savedOtp.getAttempts() + 1
+        );
+
+        // Check OTP
+        if (!passwordEncoder.matches(
+                otp,
+                savedOtp.getOtpHash()
+        )) {
+
             otpRepository.save(savedOtp);
-            throw new BadRequestException("Invalid OTP");
+
+            throw new BadRequestException(
+                    "Invalid OTP"
+            );
         }
 
-        //If it passed all this then verfied
+        // OTP is valid
         savedOtp.setUsed(true);
         otpRepository.save(savedOtp);
+
+        if (type == OtpType.EMAIL_VERIFICATION) {
+            user.setVerified(true);
+        }
     }
 
     @Override
-    public void invalidatePreviousOtp(User user, OtpType type) {
+    public void invalidatePreviousOtp(
+            User user,
+            OtpType type
+    ) {
+
         otpRepository
-                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
+                .findTopByUserAndTypeAndUsedFalseOrderByCreatedAtDesc(
+                        user,
+                        type
+                )
                 .ifPresent(otp -> {
                     otp.setUsed(true);
                     otpRepository.save(otp);

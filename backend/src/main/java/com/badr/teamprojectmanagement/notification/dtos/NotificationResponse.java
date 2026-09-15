@@ -6,17 +6,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record NotificationResponse(
-
         UUID id,
-
-        String message,
-
         NotificationType type,
-
+        String message,
         boolean read,
-
-        UUID userId,
-
         LocalDateTime createdAt
-) {
-}
+) {}
