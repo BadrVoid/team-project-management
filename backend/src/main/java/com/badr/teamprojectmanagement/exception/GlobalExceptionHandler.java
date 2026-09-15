@@ -3,6 +3,7 @@ package com.badr.teamprojectmanagement.exception;
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -45,12 +46,30 @@ public class GlobalExceptionHandler {
                 .body(GlobalResponse.error(exception.getMessage()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<GlobalResponse<Void>> handleValidationException(
+            MethodArgumentNotValidException exception) {
+
+        String message = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage())
+                .orElse("Validation failed");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(GlobalResponse.error(message));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GlobalResponse<Void>> handleGeneralException(
             Exception exception) {
 
+        exception.printStackTrace();
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(GlobalResponse.error("Something went wrong"));
+                .body(GlobalResponse.error(exception.getMessage()));
     }
 }

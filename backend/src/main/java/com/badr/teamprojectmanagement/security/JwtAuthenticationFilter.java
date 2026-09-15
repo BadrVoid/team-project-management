@@ -2,6 +2,8 @@ package com.badr.teamprojectmanagement.security;
 
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,9 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
-
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -42,17 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-
             String email = jwtService.extractUsername(token);
 
-            if (SecurityContextHolder.getContext()
-                    .getAuthentication() == null) {
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 User user = userRepository.findByEmail(email)
                         .orElse(null);
 
-                if (user != null &&
-                        jwtService.isTokenValid(token, user)) {
+                if (user != null && jwtService.isTokenValid(token, user)) {
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -60,8 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     null,
                                     List.of(
                                             new SimpleGrantedAuthority(
-                                                    "ROLE_" +
-                                                            user.getRole().name()
+                                                    "ROLE_" + user.getRole().name()
                                             )
                                     )
                             );
@@ -72,10 +68,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            filterChain.doFilter(request, response);
 
-        filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e) {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+
+            response.getWriter().write("""
+                    {
+                        "success": false,
+                        "message": "Access token expired",
+                        "data": null
+                    }
+                    """);
+
+        } catch (JwtException | IllegalArgumentException e) {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+
+            response.getWriter().write("""
+                    {
+                        "success": false,
+                        "message": "Invalid access token",
+                        "data": null
+                    }
+                    """);
+        }
     }
 }

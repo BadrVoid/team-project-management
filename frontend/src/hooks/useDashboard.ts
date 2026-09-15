@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getMySpaces } from "@/api/spaces.api";
-import { getProjectsBySpace } from "@/api/projects.api";
-import { getMyTasks, getTasksByTeam } from "@/api/tasks.api";
-import { getTeamsByProject } from "@/api/teams.api";
-import { getNotifications } from "@/api/notifications.api";
+import { getMySpaces } from "@/api/apis/spaces.api";
+import { getProjectsBySpace } from "@/api/apis/projects.api";
+import { getMyTasks, getTasksByTeam } from "@/api/apis/tasks.api";
+import { getTeamsByProject } from "@/api/apis/teams.api";
+import { getNotifications } from "@/api/apis/notifications.api";
 
 export function useDashboard() {
   const spacesQuery = useQuery({

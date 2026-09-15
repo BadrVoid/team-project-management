@@ -53,10 +53,14 @@ public class AuthServiceImpl implements com.badr.teamprojectmanagement.auth.Auth
 
         userRepository.save(user);
 
+        System.out.println("USER SAVED: " + user.getEmail());
+
         otpService.generateAndSendOtp(
                 user,
                 OtpType.EMAIL_VERIFICATION
         );
+
+        System.out.println("OTP GENERATED");
     }
 
     @Override

@@ -1,11 +1,11 @@
 // src/api/notifications.api.ts
 
-import { api } from "./axios";
-import { endpoints } from "./endpoints";
+import { api } from "../axios";
+import { endpoints } from "../endpoints";
 import type {
   GlobalResponse,
   NotificationResponse,
-} from "./types";
+} from "../types";
 
 export async function getNotifications(): Promise<
   NotificationResponse[]

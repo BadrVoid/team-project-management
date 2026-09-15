@@ -4,7 +4,7 @@ import axios, {
 } from "axios";
 
 import type { GlobalResponse, RefreshResponse } from "./types";
-import { authApi } from "./auth.api";
+import { authApi } from "./apis/auth.api";
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {

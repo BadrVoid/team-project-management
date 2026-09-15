@@ -1,7 +1,7 @@
 // src/api/auth.api.ts
 
-import { api } from "./axios";
-import { endpoints } from "./endpoints";
+import { api } from "../axios";
+import { endpoints } from "../endpoints";
 
 import type {
   ForgotPasswordRequest,
@@ -12,7 +12,7 @@ import type {
   RegisterRequest,
   ResetPasswordRequest,
   VerifyOtpRequest,
-} from "./types";
+} from "../types";
 
 export const authApi = {
   async login(data: LoginRequest): Promise<RefreshResponse> {

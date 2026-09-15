@@ -1,11 +1,11 @@
 // src/api/tasks.api.ts
 
-import { api } from "./axios";
-import { endpoints } from "./endpoints";
+import { api } from "../axios";
+import { endpoints } from "../endpoints";
 import type {
   GlobalResponse,
   TaskResponse,
-} from "./types";
+} from "../types";
 
 export async function getMyTasks(): Promise<TaskResponse[]> {
   const response = await api.get<GlobalResponse<TaskResponse[]>>(
