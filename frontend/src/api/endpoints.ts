@@ -11,9 +11,12 @@ export const endpoints = {
     logout: "/auth/logout",
     changePassword: "/auth/change-password",
   },
-
   spaces: {
     my: "/spaces/my",
+    create: "/spaces",
+    public: "/spaces/public",
+    byId: (id: string) => `/spaces/${id}`,
+    join: (id: string) => `/spaces/${id}/join`,
   },
 
   projects: {

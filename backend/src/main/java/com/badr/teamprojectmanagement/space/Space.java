@@ -1,6 +1,7 @@
 package com.badr.teamprojectmanagement.space;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
+import com.badr.teamprojectmanagement.common.enums.Visibility;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,6 +20,11 @@ public class Space extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Visibility visibility = Visibility.PRIVATE;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(

@@ -2,6 +2,7 @@ package com.badr.teamprojectmanagement.project;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
 import com.badr.teamprojectmanagement.common.enums.ProjectStatus;
+import com.badr.teamprojectmanagement.common.enums.Visibility;
 import com.badr.teamprojectmanagement.space.Space;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
@@ -32,6 +33,11 @@ public class Project extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ProjectStatus status = ProjectStatus.PLANNING;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Visibility visibility = Visibility.PRIVATE;
 
     private LocalDate startDate;
 

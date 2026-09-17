@@ -1,14 +1,21 @@
--- Team Project Management Database Schema
+-- =========================================================
+-- TEAM PROJECT MANAGEMENT DATABASE SCHEMA
 -- PostgreSQL
+-- =========================================================
 
+
+-- =========================================================
 -- RESET DATABASE SCHEMA
+-- =========================================================
 
 DROP SCHEMA IF EXISTS public CASCADE;
 
 CREATE SCHEMA public;
 
 
+-- =========================================================
 -- USERS
+-- =========================================================
 
 CREATE TABLE users
 (
@@ -28,7 +35,9 @@ CREATE TABLE users
 );
 
 
+-- =========================================================
 -- USER PROFILES
+-- =========================================================
 
 CREATE TABLE user_profiles
 (
@@ -46,7 +55,9 @@ CREATE TABLE user_profiles
 );
 
 
+-- =========================================================
 -- USER PROFILE SKILLS
+-- =========================================================
 
 CREATE TABLE user_profile_skills
 (
@@ -60,7 +71,9 @@ CREATE TABLE user_profile_skills
 );
 
 
+-- =========================================================
 -- USER PROFILE TAGS
+-- =========================================================
 
 CREATE TABLE user_profile_tags
 (
@@ -74,24 +87,105 @@ CREATE TABLE user_profile_tags
 );
 
 
+-- =========================================================
 -- SPACES
+-- =========================================================
 
 CREATE TABLE spaces
 (
     id          UUID PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
     description TEXT,
+    visibility  VARCHAR(20)  NOT NULL DEFAULT 'PRIVATE',
     owner_id    UUID         NOT NULL,
     created_at  TIMESTAMP    NOT NULL,
     updated_at  TIMESTAMP    NOT NULL,
 
     CONSTRAINT fk_spaces_owner
         FOREIGN KEY (owner_id)
-            REFERENCES users (id)
+            REFERENCES users (id),
+
+    CONSTRAINT chk_spaces_visibility
+        CHECK (visibility IN ('PRIVATE', 'PUBLIC')),
+
+    CONSTRAINT uq_spaces_owner_name
+        UNIQUE (owner_id, name)
 );
 
 
+-- =========================================================
+-- SPACE MEMBERS
+-- =========================================================
+
+CREATE TABLE space_members
+(
+    id         UUID PRIMARY KEY,
+    created_at TIMESTAMP   NOT NULL,
+    updated_at TIMESTAMP   NOT NULL,
+
+    space_id   UUID        NOT NULL,
+    user_id    UUID        NOT NULL,
+    role       VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+
+    CONSTRAINT fk_space_members_space
+        FOREIGN KEY (space_id)
+            REFERENCES spaces (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_space_members_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT uq_space_member
+        UNIQUE (space_id, user_id),
+
+    CONSTRAINT chk_space_member_role
+        CHECK (role IN ('OWNER', 'MEMBER'))
+);
+
+
+-- =========================================================
+-- SPACE JOIN REQUESTS
+-- =========================================================
+
+CREATE TABLE space_join_requests
+(
+    id         UUID PRIMARY KEY,
+    created_at TIMESTAMP   NOT NULL,
+    updated_at TIMESTAMP   NOT NULL,
+
+    space_id   UUID        NOT NULL,
+    user_id    UUID        NOT NULL,
+    status     VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+
+    CONSTRAINT fk_space_join_request_space
+        FOREIGN KEY (space_id)
+            REFERENCES spaces (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_space_join_request_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT uq_space_join_request
+        UNIQUE (space_id, user_id),
+
+    CONSTRAINT chk_space_join_request_status
+        CHECK (
+            status IN (
+                       'PENDING',
+                       'ACCEPTED',
+                       'REJECTED'
+                )
+            )
+);
+
+
+-- =========================================================
 -- PROJECTS
+-- =========================================================
 
 CREATE TABLE projects
 (
@@ -100,6 +194,7 @@ CREATE TABLE projects
     name        VARCHAR(100) NOT NULL,
     description TEXT,
     status      VARCHAR(20)  NOT NULL DEFAULT 'PLANNING',
+    visibility  VARCHAR(20)  NOT NULL DEFAULT 'PRIVATE',
     start_date  DATE,
     end_date    DATE,
     created_by  UUID         NOT NULL,
@@ -115,6 +210,9 @@ CREATE TABLE projects
         FOREIGN KEY (created_by)
             REFERENCES users (id),
 
+    CONSTRAINT uq_projects_space_name
+        UNIQUE (space_id, name),
+
     CONSTRAINT chk_projects_status
         CHECK (
             status IN (
@@ -123,11 +221,16 @@ CREATE TABLE projects
                        'COMPLETED',
                        'ARCHIVED'
                 )
-            )
+            ),
+
+    CONSTRAINT chk_projects_visibility
+        CHECK (visibility IN ('PRIVATE', 'PUBLIC'))
 );
 
 
+-- =========================================================
 -- PROJECT MEMBERS
+-- =========================================================
 
 CREATE TABLE project_members
 (
@@ -172,7 +275,9 @@ CREATE TABLE project_members
 );
 
 
+-- =========================================================
 -- PROJECT JOIN REQUESTS / INVITATIONS
+-- =========================================================
 
 CREATE TABLE project_join_requests
 (
@@ -193,7 +298,7 @@ CREATE TABLE project_join_requests
             REFERENCES users (id)
             ON DELETE CASCADE,
 
-    CONSTRAINT uk_project_join_request
+    CONSTRAINT uq_project_join_request
         UNIQUE (project_id, user_id),
 
     CONSTRAINT chk_project_join_requests_status
@@ -207,7 +312,9 @@ CREATE TABLE project_join_requests
 );
 
 
+-- =========================================================
 -- TEAMS
+-- =========================================================
 
 CREATE TABLE teams
 (
@@ -215,6 +322,7 @@ CREATE TABLE teams
     project_id  UUID         NOT NULL,
     name        VARCHAR(100) NOT NULL,
     description TEXT,
+    visibility  VARCHAR(20)  NOT NULL DEFAULT 'PRIVATE',
     created_at  TIMESTAMP    NOT NULL,
     updated_at  TIMESTAMP    NOT NULL,
 
@@ -224,11 +332,16 @@ CREATE TABLE teams
             ON DELETE CASCADE,
 
     CONSTRAINT uq_teams_project_name
-        UNIQUE (project_id, name)
+        UNIQUE (project_id, name),
+
+    CONSTRAINT chk_teams_visibility
+        CHECK (visibility IN ('PRIVATE', 'PUBLIC'))
 );
 
 
+-- =========================================================
 -- TEAM MEMBERS
+-- =========================================================
 
 CREATE TABLE team_members
 (
@@ -262,7 +375,9 @@ CREATE TABLE team_members
 );
 
 
+-- =========================================================
 -- TEAM JOIN REQUESTS / INVITATIONS
+-- =========================================================
 
 CREATE TABLE team_join_requests
 (
@@ -283,7 +398,7 @@ CREATE TABLE team_join_requests
             REFERENCES users (id)
             ON DELETE CASCADE,
 
-    CONSTRAINT uk_team_join_request
+    CONSTRAINT uq_team_join_request
         UNIQUE (team_id, user_id),
 
     CONSTRAINT chk_team_join_requests_status
@@ -297,7 +412,9 @@ CREATE TABLE team_join_requests
 );
 
 
+-- =========================================================
 -- TASKS
+-- =========================================================
 
 CREATE TABLE tasks
 (
@@ -349,7 +466,9 @@ CREATE TABLE tasks
 );
 
 
+-- =========================================================
 -- TASK COMMENTS
+-- =========================================================
 
 CREATE TABLE task_comments
 (
@@ -372,7 +491,9 @@ CREATE TABLE task_comments
 );
 
 
+-- =========================================================
 -- NOTIFICATIONS
+-- =========================================================
 
 CREATE TABLE notifications
 (
@@ -404,7 +525,9 @@ CREATE TABLE notifications
 );
 
 
+-- =========================================================
 -- REFRESH TOKENS
+-- =========================================================
 
 CREATE TABLE refresh_tokens
 (
@@ -421,7 +544,9 @@ CREATE TABLE refresh_tokens
 );
 
 
--- OTPs
+-- =========================================================
+-- OTPS
+-- =========================================================
 
 CREATE TABLE otps
 (
@@ -449,16 +574,16 @@ CREATE TABLE otps
             )
 );
 
---user_authentications
+
+-- =========================================================
+-- USER AUTHENTICATIONS
+-- =========================================================
 
 CREATE TABLE user_authentications
 (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
     user_id     UUID         NOT NULL,
-
     provider    VARCHAR(20)  NOT NULL,
-
     provider_id VARCHAR(255) NOT NULL,
 
     CONSTRAINT fk_user_authentication_user
@@ -470,7 +595,10 @@ CREATE TABLE user_authentications
         UNIQUE (provider, provider_id)
 );
 
+
+-- =========================================================
 -- INDEXES
+-- =========================================================
 
 -- Users
 
@@ -522,6 +650,33 @@ CREATE INDEX idx_user_profile_tags_tag
 CREATE INDEX idx_spaces_owner_id
     ON spaces (owner_id);
 
+CREATE INDEX idx_spaces_visibility
+    ON spaces (visibility);
+
+
+-- Space Members
+
+CREATE INDEX idx_space_members_space_id
+    ON space_members (space_id);
+
+CREATE INDEX idx_space_members_user_id
+    ON space_members (user_id);
+
+CREATE INDEX idx_space_members_role
+    ON space_members (role);
+
+
+-- Space Join Requests
+
+CREATE INDEX idx_space_join_requests_space_id
+    ON space_join_requests (space_id);
+
+CREATE INDEX idx_space_join_requests_user_id
+    ON space_join_requests (user_id);
+
+CREATE INDEX idx_space_join_requests_status
+    ON space_join_requests (status);
+
 
 -- Projects
 
@@ -530,6 +685,12 @@ CREATE INDEX idx_projects_space_id
 
 CREATE INDEX idx_projects_created_by
     ON projects (created_by);
+
+CREATE INDEX idx_projects_visibility
+    ON projects (visibility);
+
+CREATE INDEX idx_projects_status
+    ON projects (status);
 
 
 -- Project Members
@@ -540,6 +701,9 @@ CREATE INDEX idx_project_members_project_id
 CREATE INDEX idx_project_members_user_id
     ON project_members (user_id);
 
+CREATE INDEX idx_project_members_status
+    ON project_members (status);
+
 
 -- Project Join Requests
 
@@ -549,11 +713,17 @@ CREATE INDEX idx_project_join_requests_project_id
 CREATE INDEX idx_project_join_requests_user_id
     ON project_join_requests (user_id);
 
+CREATE INDEX idx_project_join_requests_status
+    ON project_join_requests (status);
+
 
 -- Teams
 
 CREATE INDEX idx_teams_project_id
     ON teams (project_id);
+
+CREATE INDEX idx_teams_visibility
+    ON teams (visibility);
 
 
 -- Team Members
@@ -564,6 +734,9 @@ CREATE INDEX idx_team_members_team_id
 CREATE INDEX idx_team_members_user_id
     ON team_members (user_id);
 
+CREATE INDEX idx_team_members_role
+    ON team_members (role);
+
 
 -- Team Join Requests
 
@@ -572,6 +745,9 @@ CREATE INDEX idx_team_join_requests_team_id
 
 CREATE INDEX idx_team_join_requests_user_id
     ON team_join_requests (user_id);
+
+CREATE INDEX idx_team_join_requests_status
+    ON team_join_requests (status);
 
 
 -- Tasks
@@ -584,6 +760,12 @@ CREATE INDEX idx_tasks_assigned_to
 
 CREATE INDEX idx_tasks_created_by
     ON tasks (created_by);
+
+CREATE INDEX idx_tasks_status
+    ON tasks (status);
+
+CREATE INDEX idx_tasks_due_date
+    ON tasks (due_date);
 
 
 -- Task Comments
@@ -600,6 +782,9 @@ CREATE INDEX idx_task_comments_user_id
 CREATE INDEX idx_notifications_user_id
     ON notifications (user_id);
 
+CREATE INDEX idx_notifications_is_read
+    ON notifications (is_read);
+
 
 -- Refresh Tokens
 
@@ -614,3 +799,9 @@ CREATE INDEX idx_otps_user_type
 
 CREATE INDEX idx_otps_expires_at
     ON otps (expires_at);
+
+
+-- User Authentications
+
+CREATE INDEX idx_user_authentications_user_id
+    ON user_authentications (user_id);

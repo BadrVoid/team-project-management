@@ -1,29 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import {
   Bell,
   CheckSquare,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Compass,
   FolderKanban,
   LayoutDashboard,
   Settings,
   Users,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 
 const navigation = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Spaces",
-    href: "/spaces",
-    icon: FolderKanban,
-  },
   {
     title: "Projects",
     href: "/projects",
@@ -46,24 +39,51 @@ const navigation = [
   },
 ];
 
+const spaceNavigation = [
+  {
+    title: "My Spaces",
+    href: "/spaces",
+    icon: FolderKanban,
+  },
+  {
+    title: "Discover",
+    href: "/spaces/discover",
+    icon: Compass,
+  },
+];
+
 export default function Sidebar() {
+  const location = useLocation();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const [isSpacesOpen, setIsSpacesOpen] = useState(
+    location.pathname.startsWith("/spaces"),
+  );
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/spaces")) {
+      setIsSpacesOpen(true);
+    }
+  }, [location.pathname]);
+
+  const isSpacesActive = location.pathname.startsWith("/spaces");
 
   return (
     <aside
-      className={`relative hidden  border-r bg-card transition-[width] duration-300 ease-in-out md:flex md:flex-col ${
+      className={`relative hidden border-r bg-card transition-[width] duration-300 ease-in-out md:flex md:flex-col ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
       {/* Header */}
       <div
-        className={`flex h-16  items-center border-b ${
+        className={`flex h-16 items-center border-b ${
           isCollapsed ? "justify-center px-3" : "px-5"
         }`}
       >
         <div className="flex min-w-0 items-center gap-3">
           {/* Logo */}
-          <div className="size-9  overflow-hidden rounded-xl">
+          <div className="size-9 shrink-0 overflow-hidden rounded-xl">
             <svg
               width="100%"
               height="100%"
@@ -139,6 +159,124 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-5">
+        {/* Dashboard */}
+        <NavLink
+          to="/dashboard"
+          title={isCollapsed ? "Dashboard" : undefined}
+          className={({ isActive }) =>
+            `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+              isCollapsed ? "justify-center" : "gap-3 px-3"
+            } ${
+              isActive
+                ? "border-l-4 border-l-primary bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <LayoutDashboard
+                className={`size-[18px] ${
+                  isActive ? "text-primary" : "hover:scale-105"
+                }`}
+              />
+
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                }`}
+              >
+                Dashboard
+              </span>
+            </>
+          )}
+        </NavLink>
+
+        {/* Spaces */}
+        <div>
+          <div
+            className={`flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+              isSpacesActive
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            }`}
+          >
+            {/* Spaces Link */}
+            <NavLink
+              to="/spaces"
+              title={isCollapsed ? "Spaces" : undefined}
+              className={`relative flex h-full min-w-0 flex-1 items-center rounded-lg ${
+                isCollapsed ? "justify-center" : "gap-3 px-3"
+              }`}
+            >
+              <FolderKanban className="size-[18px] shrink-0" />
+
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                }`}
+              >
+                Spaces
+              </span>
+            </NavLink>
+
+            {/* Spaces Toggle */}
+            {!isCollapsed && (
+              <button
+                type="button"
+                onClick={() => setIsSpacesOpen((previous) => !previous)}
+                aria-label={isSpacesOpen ? "Collapse Spaces" : "Expand Spaces"}
+                className="mr-2 flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-primary/10"
+              >
+                <ChevronDown
+                  className={`size-4 transition-transform duration-200 ${
+                    isSpacesOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            )}
+          </div>
+
+          {/* Spaces Submenu */}
+          {!isCollapsed && (
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ${
+                isSpacesOpen
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div className="ml-6 mt-1 space-y-1 border-l border-border pl-3">
+                  {spaceNavigation.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <NavLink
+                        key={item.href}
+                        to={item.href}
+                        end={item.href === "/spaces"}
+                        className={({ isActive }) =>
+                          `flex h-9 items-center gap-2 rounded-lg px-3 text-sm transition-colors ${
+                            isActive
+                              ? "bg-primary/10 font-medium text-primary"
+                              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          }`
+                        }
+                      >
+                        <Icon className="size-4" />
+
+                        <span>{item.title}</span>
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Other Navigation */}
         {navigation.map((item) => {
           const Icon = item.icon;
 
@@ -148,11 +286,11 @@ export default function Sidebar() {
               to={item.href}
               title={isCollapsed ? item.title : undefined}
               className={({ isActive }) =>
-                ` relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+                `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
                   isCollapsed ? "justify-center" : "gap-3 px-3"
                 } ${
                   isActive
-                    ? "bg-primary/10 text-primary border-l-4 border-l-primary"
+                    ? "border-l-4 border-l-primary bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 }`
               }
@@ -160,7 +298,7 @@ export default function Sidebar() {
               {({ isActive }) => (
                 <>
                   <Icon
-                    className={`size-[18px]  transition-transform duration-200 ${
+                    className={`size-[18px] transition-transform duration-200 ${
                       isActive ? "text-primary" : "hover:scale-105"
                     }`}
                   />
@@ -185,7 +323,7 @@ export default function Sidebar() {
           to="/settings"
           title={isCollapsed ? "Settings" : undefined}
           className={({ isActive }) =>
-            ` relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+            `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
               isCollapsed ? "justify-center" : "gap-3 px-3"
             } ${
               isActive
@@ -200,7 +338,7 @@ export default function Sidebar() {
                 <span className="absolute left-0 h-5 w-0.5 rounded-full bg-primary" />
               )}
 
-              <Settings className={"size-[18px]"} />
+              <Settings className="size-[18px]" />
 
               <span
                 className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${

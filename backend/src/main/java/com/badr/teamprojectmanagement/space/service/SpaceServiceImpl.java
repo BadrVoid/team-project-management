@@ -1,9 +1,14 @@
 package com.badr.teamprojectmanagement.space.service;
 
+import com.badr.teamprojectmanagement.common.enums.SpaceJoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.SpaceMemberRole;
+import com.badr.teamprojectmanagement.common.enums.SpaceMembershipStatus;
+import com.badr.teamprojectmanagement.common.enums.Visibility;
+import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
-import com.badr.teamprojectmanagement.space.Space;
-import com.badr.teamprojectmanagement.space.SpaceRepository;
+import com.badr.teamprojectmanagement.space.*;
+import com.badr.teamprojectmanagement.space.dtos.PublicSpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceCreateRequest;
 import com.badr.teamprojectmanagement.space.dtos.SpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceUpdateRequest;
@@ -23,53 +28,170 @@ public class SpaceServiceImpl implements SpaceService {
 
     private final SpaceRepository spaceRepository;
     private final UserRepository userRepository;
+    private final SpaceMemberRepository spaceMemberRepository;
+    private final SpaceJoinRequestRepository spaceJoinRequestRepository;
 
     @Override
-    public SpaceResponse createSpace(UUID ownerId, SpaceCreateRequest request) {
-
-        //Find owner
+    @Transactional
+    public SpaceResponse createSpace(
+            UUID ownerId,
+            SpaceCreateRequest request
+    ) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found")
                 );
 
-        //Create space
+        if (spaceRepository.existsByOwnerIdAndNameIgnoreCase(
+                ownerId,
+                request.name().trim()
+        )) {
+            throw new BadRequestException(
+                    "A space with this name already exists"
+            );
+        }
+
         Space space = Space.builder()
-                .name(request.name())
+                .name(request.name().trim())
                 .description(request.description())
+                .visibility(
+                        request.visibility() != null
+                                ? request.visibility()
+                                : Visibility.PRIVATE
+                )
                 .owner(owner)
                 .build();
 
-        //Save space
         spaceRepository.save(space);
+
+        SpaceMember ownerMember = SpaceMember.builder()
+                .space(space)
+                .user(owner)
+                .role(SpaceMemberRole.OWNER)
+                .build();
+
+        spaceMemberRepository.save(ownerMember);
 
         return mapToResponse(space);
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public SpaceResponse getSpaceById(UUID id) {
-
-        //Find space
+    public SpaceResponse getSpaceById(UUID id, UUID userId) {
         Space space = spaceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Space not found")
                 );
 
+        boolean isPublic = space.getVisibility() == Visibility.PUBLIC;
+
+        boolean isOwner = userId != null
+                && space.getOwner().getId().equals(userId);
+
+        if (!isPublic && !isOwner) {
+            throw new ForbiddenException(
+                    "You are not allowed to access this space"
+            );
+        }
+
         return mapToResponse(space);
+    }
+
+    @Override
+    @Transactional
+    public PublicSpaceResponse joinSpace(
+            UUID spaceId,
+            UUID userId
+    ) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Space not found")
+                );
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
+
+        if (space.getVisibility() != Visibility.PUBLIC) {
+            throw new ForbiddenException(
+                    "You cannot join a private space"
+            );
+        }
+
+        if (spaceMemberRepository.existsBySpaceIdAndUserId(
+                spaceId,
+                userId
+        )) {
+            throw new BadRequestException(
+                    "You are already a member of this space"
+            );
+        }
+
+        if (spaceJoinRequestRepository
+                .existsBySpaceIdAndUserIdAndStatus(
+                        spaceId,
+                        userId,
+                        SpaceJoinRequestStatus.PENDING
+                )) {
+
+            throw new BadRequestException(
+                    "You already have a pending join request"
+            );
+        }
+
+        SpaceJoinRequest request = SpaceJoinRequest.builder()
+                .space(space)
+                .user(user)
+                .status(SpaceJoinRequestStatus.PENDING)
+                .build();
+
+        spaceJoinRequestRepository.save(request);
+
+        return mapToPublicSpaceResponse(
+                space,
+                SpaceMembershipStatus.PENDING
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PublicSpaceResponse> getPublicSpaces(
+            UUID userId
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
+
+        return spaceRepository
+                .findByVisibility(Visibility.PUBLIC)
+                .stream()
+                .map(space -> {
+                    SpaceMembershipStatus status =
+                            getMembershipStatus(
+                                    space.getId(),
+                                    user.getId()
+                            );
+
+                    return mapToPublicSpaceResponse(
+                            space,
+                            status
+                    );
+                })
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SpaceResponse> getSpacesByOwner(UUID ownerId) {
 
-        //Find owner
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found")
                 );
 
-        //Find spaces
         return spaceRepository.findByOwner(owner)
                 .stream()
                 .map(this::mapToResponse)
@@ -82,6 +204,7 @@ public class SpaceServiceImpl implements SpaceService {
             UUID ownerId,
             SpaceUpdateRequest request
     ) {
+
         Space space = spaceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Space not found")
@@ -124,7 +247,52 @@ public class SpaceServiceImpl implements SpaceService {
                 space.getId(),
                 space.getName(),
                 space.getDescription(),
+                space.getVisibility(),
                 space.getOwner().getId()
+        );
+    }
+
+    private SpaceMembershipStatus getMembershipStatus(
+            UUID spaceId,
+            UUID userId
+    ) {
+        if (spaceMemberRepository.existsBySpaceIdAndUserIdAndRole(
+                spaceId,
+                userId,
+                SpaceMemberRole.OWNER
+        )) {
+            return SpaceMembershipStatus.OWNER;
+        }
+
+        if (spaceMemberRepository.existsBySpaceIdAndUserId(
+                spaceId,
+                userId
+        )) {
+            return SpaceMembershipStatus.MEMBER;
+        }
+
+        if (spaceJoinRequestRepository.existsBySpaceIdAndUserIdAndStatus(
+                spaceId,
+                userId,
+                SpaceJoinRequestStatus.PENDING
+        )) {
+            return SpaceMembershipStatus.PENDING;
+        }
+
+        return SpaceMembershipStatus.NONE;
+    }
+
+    private PublicSpaceResponse mapToPublicSpaceResponse(
+            Space space,
+            SpaceMembershipStatus membershipStatus
+    ) {
+        return new PublicSpaceResponse(
+                space.getId(),
+                space.getName(),
+                space.getDescription(),
+                space.getVisibility(),
+                space.getOwner().getId(),
+                membershipStatus
         );
     }
 }

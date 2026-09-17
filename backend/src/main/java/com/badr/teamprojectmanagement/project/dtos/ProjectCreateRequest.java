@@ -1,6 +1,7 @@
 package com.badr.teamprojectmanagement.project.dtos;
 
 import com.badr.teamprojectmanagement.common.enums.ProjectStatus;
+import com.badr.teamprojectmanagement.common.enums.Visibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,7 +23,10 @@ public record ProjectCreateRequest(
 
         ProjectStatus status,
 
+        Visibility visibility,
+
         LocalDate startDate,
 
         LocalDate endDate
-) {}
+) {
+}

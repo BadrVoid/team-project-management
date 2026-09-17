@@ -1,11 +1,13 @@
 package com.badr.teamprojectmanagement.space.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
+import com.badr.teamprojectmanagement.space.dtos.PublicSpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceCreateRequest;
 import com.badr.teamprojectmanagement.space.dtos.SpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceUpdateRequest;
 import com.badr.teamprojectmanagement.space.service.SpaceService;
 import com.badr.teamprojectmanagement.user.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +26,7 @@ public class SpaceController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public GlobalResponse<SpaceResponse> createSpace(
-            @RequestBody SpaceCreateRequest request,
+            @Valid @RequestBody SpaceCreateRequest request,
             @AuthenticationPrincipal User user
     ) {
         SpaceResponse response =
@@ -35,19 +37,6 @@ public class SpaceController {
 
         return GlobalResponse.success(
                 "Space created successfully",
-                response
-        );
-    }
-
-    @GetMapping("/{id}")
-    public GlobalResponse<SpaceResponse> getSpaceById(
-            @PathVariable UUID id
-    ) {
-        SpaceResponse response =
-                spaceService.getSpaceById(id);
-
-        return GlobalResponse.success(
-                "Space retrieved successfully",
                 response
         );
     }
@@ -67,10 +56,59 @@ public class SpaceController {
         );
     }
 
+    @GetMapping("/public")
+    public GlobalResponse<List<PublicSpaceResponse>> getPublicSpaces(
+            @AuthenticationPrincipal User user
+    ) {
+        List<PublicSpaceResponse> response =
+                spaceService.getPublicSpaces(
+                        user.getId()
+                );
+
+        return GlobalResponse.success(
+                "Public spaces retrieved successfully",
+                response
+        );
+    }
+
+    @PostMapping("/{id}/join")
+    public GlobalResponse<PublicSpaceResponse> joinSpace(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
+    ) {
+        PublicSpaceResponse response =
+                spaceService.joinSpace(
+                        id,
+                        user.getId()
+                );
+
+        return GlobalResponse.success(
+                "Join request sent successfully",
+                response
+        );
+    }
+
+    @GetMapping("/{id}")
+    public GlobalResponse<SpaceResponse> getSpaceById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
+    ) {
+        SpaceResponse response =
+                spaceService.getSpaceById(
+                        id,
+                        user != null ? user.getId() : null
+                );
+
+        return GlobalResponse.success(
+                "Space retrieved successfully",
+                response
+        );
+    }
+
     @PutMapping("/{id}")
     public GlobalResponse<SpaceResponse> updateSpace(
             @PathVariable UUID id,
-            @RequestBody SpaceUpdateRequest request,
+            @Valid @RequestBody SpaceUpdateRequest request,
             @AuthenticationPrincipal User user
     ) {
         SpaceResponse response =

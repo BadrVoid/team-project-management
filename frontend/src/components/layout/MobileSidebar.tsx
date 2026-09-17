@@ -1,13 +1,15 @@
 import {
   Bell,
   CheckSquare,
+  ChevronDown,
+  Compass,
   FolderKanban,
   LayoutDashboard,
   Settings,
   Users,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-
+import { NavLink, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -20,11 +22,6 @@ const navigation = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-  },
-  {
-    title: "Spaces",
-    href: "/spaces",
-    icon: FolderKanban,
   },
   {
     title: "Projects",
@@ -48,6 +45,19 @@ const navigation = [
   },
 ];
 
+const spaceNavigation = [
+  {
+    title: "My Spaces",
+    href: "/spaces",
+    icon: FolderKanban,
+  },
+  {
+    title: "Discover",
+    href: "/spaces/discover",
+    icon: Compass,
+  },
+];
+
 type MobileSidebarProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -57,9 +67,23 @@ export default function MobileSidebar({
   open,
   onOpenChange,
 }: MobileSidebarProps) {
+  const location = useLocation();
+
+  const [isSpacesOpen, setIsSpacesOpen] = useState(
+    location.pathname.startsWith("/spaces"),
+  );
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/spaces")) {
+      setIsSpacesOpen(true);
+    }
+  }, [location.pathname]);
+
+  const isSpacesActive = location.pathname.startsWith("/spaces");
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72 p-0 bg-white">
+      <SheetContent side="left" className="w-72 bg-card p-0">
         {/* Header */}
         <SheetHeader className="flex h-16 flex-row items-center border-b px-5">
           <div className="flex items-center gap-3">
@@ -114,6 +138,106 @@ export default function MobileSidebar({
         {/* Navigation */}
         <nav className="flex flex-1 flex-col px-3 py-3">
           <div className="space-y-1">
+            {/* Dashboard */}
+            <NavLink
+              to="/dashboard"
+              onClick={() => onOpenChange(false)}
+              className={({ isActive }) =>
+                `relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "border-l-2 border-l-primary bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <LayoutDashboard
+                    className={`size-[18px] shrink-0 ${
+                      isActive ? "text-primary" : ""
+                    }`}
+                  />
+
+                  <span>Dashboard</span>
+                </>
+              )}
+            </NavLink>
+
+            {/* Spaces */}
+            <div>
+              <div
+                className={`flex h-10 items-center rounded-lg text-sm font-medium transition-colors ${
+                  isSpacesActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                }`}
+              >
+                {/* Spaces Link */}
+                <NavLink
+                  to="/spaces"
+                  className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg px-3"
+                >
+                  <FolderKanban className="size-[18px] shrink-0" />
+
+                  <span>Spaces</span>
+                </NavLink>
+
+                {/* Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsSpacesOpen((previous) => !previous)}
+                  aria-label={
+                    isSpacesOpen ? "Collapse Spaces" : "Expand Spaces"
+                  }
+                  className="mr-2 flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-primary/10"
+                >
+                  <ChevronDown
+                    className={`size-4 transition-transform duration-200 ${
+                      isSpacesOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Spaces Submenu */}
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ${
+                  isSpacesOpen
+                    ? "grid-rows-[1fr] opacity-100"
+                    : "grid-rows-[0fr] opacity-0"
+                }`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="ml-6 mt-1 space-y-1 border-l border-border pl-3">
+                    {spaceNavigation.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <NavLink
+                          key={item.href}
+                          to={item.href}
+                          end={item.href === "/spaces"}
+                          onClick={() => onOpenChange(false)}
+                          className={({ isActive }) =>
+                            `flex h-9 items-center gap-2 rounded-lg px-3 text-sm transition-colors ${
+                              isActive
+                                ? "bg-primary/10 font-medium text-primary"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                            }`
+                          }
+                        >
+                          <Icon className="size-4" />
+
+                          <span>{item.title}</span>
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Other Navigation */}
             {navigation.map((item) => {
               const Icon = item.icon;
 
@@ -152,15 +276,24 @@ export default function MobileSidebar({
               to="/settings"
               onClick={() => onOpenChange(false)}
               className={({ isActive }) =>
-                `flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                `relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
                   isActive
                     ? "border-l-2 border-l-primary bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 }`
               }
             >
-              <Settings className="size-[18px] shrink-0" />
-              Settings
+              {({ isActive }) => (
+                <>
+                  <Settings
+                    className={`size-[18px] shrink-0 ${
+                      isActive ? "text-primary" : ""
+                    }`}
+                  />
+
+                  <span>Settings</span>
+                </>
+              )}
             </NavLink>
           </div>
         </nav>

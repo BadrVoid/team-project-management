@@ -78,14 +78,27 @@ export interface UserResponse {
 // =========================
 // Space
 // =========================
-
+export type SpaceVisibility = "PRIVATE" | "PUBLIC";
 export interface SpaceResponse {
   id: string;
   name: string;
   description: string;
   ownerId: string;
+  visibility: SpaceVisibility;
 }
-
+export type SpaceMembershipStatus =
+  | "NONE"
+  | "PENDING"
+  | "MEMBER"
+  | "OWNER";
+export interface PublicSpaceResponse {
+  id: string;
+  name: string;
+  description: string;
+  visibility: SpaceVisibility;
+  ownerId: string;
+  membershipStatus: SpaceMembershipStatus;
+}
 // =========================
 // Project
 // =========================
