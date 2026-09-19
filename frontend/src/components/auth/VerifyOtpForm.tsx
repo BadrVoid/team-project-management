@@ -4,7 +4,7 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useVerifyOtp } from "@/hooks/auth.hooks";
+import { useVerifyOtp } from "@/hooks/useAuth";
 
 type OtpPurpose = "register" | "reset-password";
 

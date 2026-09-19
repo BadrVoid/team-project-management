@@ -1,19 +1,16 @@
 package com.badr.teamprojectmanagement.project.service;
 
-import com.badr.teamprojectmanagement.common.enums.MembershipStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.project.Project;
 import com.badr.teamprojectmanagement.project.ProjectMember;
 import com.badr.teamprojectmanagement.project.ProjectMemberRepository;
 import com.badr.teamprojectmanagement.project.ProjectRepository;
-import com.badr.teamprojectmanagement.project.dtos.ProjectDetailsResponse;
 import com.badr.teamprojectmanagement.project.dtos.ProjectMemberRequest;
 import com.badr.teamprojectmanagement.project.dtos.ProjectMemberResponse;
-import com.badr.teamprojectmanagement.team.dtos.TeamSummaryResponse;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
-import com.badr.teamprojectmanagement.user.dtos.UserSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,8 +54,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
             ProjectMember member = existingMember.get();
 
             // Reactivate rejected invitation
-            if (member.getStatus() == MembershipStatus.REJECTED) {
-                member.setStatus(MembershipStatus.PENDING);
+            if (member.getStatus() == RequestStatus.REJECTED) {
+                member.setStatus(RequestStatus.PENDING);
                 member.setRole(request.role());
 
                 return mapToResponse(member);
@@ -74,7 +71,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 .project(project)
                 .user(user)
                 .role(request.role())
-                .status(MembershipStatus.PENDING)
+                .status(RequestStatus.PENDING)
                 .build();
 
         projectMemberRepository.save(member);
@@ -94,7 +91,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         return projectMemberRepository.findByProjectId(projectId)
                 .stream()
                 .filter(member ->
-                        member.getStatus() == MembershipStatus.ACCEPTED
+                        member.getStatus() == RequestStatus.ACCEPTED
                 )
                 .map(this::mapToResponse)
                 .toList();
@@ -111,7 +108,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 );
 
         return projectMemberRepository
-                .findByUserAndStatus(user, MembershipStatus.PENDING)
+                .findByUserAndStatus(user, RequestStatus.PENDING)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -128,7 +125,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 userId
         );
 
-        member.setStatus(MembershipStatus.ACCEPTED);
+        member.setStatus(RequestStatus.ACCEPTED);
 
         return mapToResponse(member);
     }
@@ -144,7 +141,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 userId
         );
 
-        member.setStatus(MembershipStatus.REJECTED);
+        member.setStatus(RequestStatus.REJECTED);
 
         return mapToResponse(member);
     }
@@ -211,7 +208,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 .findByProjectIdAndUserAndStatus(
                         projectId,
                         user,
-                        MembershipStatus.PENDING
+                        RequestStatus.PENDING
                 )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(

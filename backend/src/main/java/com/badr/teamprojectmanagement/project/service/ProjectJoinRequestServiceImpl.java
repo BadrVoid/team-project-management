@@ -1,6 +1,6 @@
 package com.badr.teamprojectmanagement.project.service;
 
-import com.badr.teamprojectmanagement.common.enums.JoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.NotificationType;
 import com.badr.teamprojectmanagement.common.enums.ProjectMemberRole;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
@@ -70,14 +70,14 @@ public class ProjectJoinRequestServiceImpl
             ProjectJoinRequest request = existingRequest.get();
 
             // Don't allow duplicate pending requests
-            if (request.getStatus() == JoinRequestStatus.PENDING) {
+            if (request.getStatus() == RequestStatus.PENDING) {
                 throw new BadRequestException(
                         "Join request is already pending"
                 );
             }
 
             // Allow requesting again after rejection
-            request.setStatus(JoinRequestStatus.PENDING);
+            request.setStatus(RequestStatus.PENDING);
 
             joinRequestRepository.save(request);
 
@@ -88,7 +88,7 @@ public class ProjectJoinRequestServiceImpl
         ProjectJoinRequest request = ProjectJoinRequest.builder()
                 .project(project)
                 .user(user)
-                .status(JoinRequestStatus.PENDING)
+                .status(RequestStatus.PENDING)
                 .build();
 
         ProjectJoinRequest savedRequest =
@@ -115,7 +115,7 @@ public class ProjectJoinRequestServiceImpl
         return joinRequestRepository
                 .findByProjectIdAndStatus(
                         projectId,
-                        JoinRequestStatus.PENDING
+                        RequestStatus.PENDING
                 )
                 .stream()
                 .map(this::mapToResponse)
@@ -135,7 +135,7 @@ public class ProjectJoinRequestServiceImpl
         // Only OWNER/MANAGER can accept requests
         verifyProjectManager(projectId, currentUserId);
 
-        if (request.getStatus() != JoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Join request has already been processed"
             );
@@ -164,7 +164,7 @@ public class ProjectJoinRequestServiceImpl
         projectMemberRepository.save(member);
 
         // Mark request as accepted
-        request.setStatus(JoinRequestStatus.ACCEPTED);
+        request.setStatus(RequestStatus.ACCEPTED);
 
         joinRequestRepository.save(request);
 
@@ -184,13 +184,13 @@ public class ProjectJoinRequestServiceImpl
         // Only OWNER/MANAGER can reject requests
         verifyProjectManager(projectId, currentUserId);
 
-        if (request.getStatus() != JoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Join request has already been processed"
             );
         }
 
-        request.setStatus(JoinRequestStatus.REJECTED);
+        request.setStatus(RequestStatus.REJECTED);
 
         joinRequestRepository.save(request);
 
@@ -237,21 +237,21 @@ public class ProjectJoinRequestServiceImpl
             request = existingRequest.get();
 
             // Don't allow another pending request/invitation
-            if (request.getStatus() == JoinRequestStatus.PENDING) {
+            if (request.getStatus() == RequestStatus.PENDING) {
                 throw new BadRequestException(
                         "There is already a pending request or invitation"
                 );
             }
 
             // Reuse rejected request
-            request.setStatus(JoinRequestStatus.PENDING);
+            request.setStatus(RequestStatus.PENDING);
 
         } else {
 
             request = ProjectJoinRequest.builder()
                     .project(project)
                     .user(user)
-                    .status(JoinRequestStatus.PENDING)
+                    .status(RequestStatus.PENDING)
                     .build();
         }
 
@@ -282,7 +282,7 @@ public class ProjectJoinRequestServiceImpl
         return joinRequestRepository
                 .findByUserIdAndStatus(
                         userId,
-                        JoinRequestStatus.PENDING
+                        RequestStatus.PENDING
                 )
                 .stream()
                 .map(this::mapToResponse)
@@ -304,7 +304,7 @@ public class ProjectJoinRequestServiceImpl
             );
         }
 
-        if (request.getStatus() != JoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Invitation has already been processed"
             );
@@ -333,7 +333,7 @@ public class ProjectJoinRequestServiceImpl
         projectMemberRepository.save(member);
 
         // Mark invitation as accepted
-        request.setStatus(JoinRequestStatus.ACCEPTED);
+        request.setStatus(RequestStatus.ACCEPTED);
 
         joinRequestRepository.save(request);
 
@@ -355,13 +355,13 @@ public class ProjectJoinRequestServiceImpl
             );
         }
 
-        if (request.getStatus() != JoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Invitation has already been processed"
             );
         }
 
-        request.setStatus(JoinRequestStatus.REJECTED);
+        request.setStatus(RequestStatus.REJECTED);
 
         joinRequestRepository.save(request);
 

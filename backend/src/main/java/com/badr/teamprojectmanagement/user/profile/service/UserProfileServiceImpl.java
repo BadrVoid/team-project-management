@@ -1,5 +1,9 @@
+
 package com.badr.teamprojectmanagement.user.profile.service;
 
+import com.badr.teamprojectmanagement.auth.AuthProvider;
+import com.badr.teamprojectmanagement.auth.UserAuthentication;
+import com.badr.teamprojectmanagement.auth.UserAuthenticationRepository;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
@@ -20,13 +24,13 @@ import java.util.UUID;
 public class UserProfileServiceImpl
         implements UserProfileService {
 
+    private final UserAuthenticationRepository userAuthenticationRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository profileRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(UUID userId) {
-
         return getProfile(userId);
     }
 
@@ -104,12 +108,21 @@ public class UserProfileServiceImpl
             UserProfile profile
     ) {
 
+        AuthProvider authProvider =
+                userAuthenticationRepository
+                        .findByUserId(user.getId())
+                        .stream()
+                        .findFirst()
+                        .map(UserAuthentication::getProvider)
+                        .orElse(null);
+
         return new UserProfileResponse(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
                 user.getRole(),
+                authProvider,
                 profile.getBio(),
                 profile.getUniversity(),
                 profile.getDepartment(),
@@ -119,8 +132,8 @@ public class UserProfileServiceImpl
         );
     }
 
-    private java.util.List<String> normalize(
-            java.util.List<String> values
+    private List<String> normalize(
+            List<String> values
     ) {
 
         return values.stream()

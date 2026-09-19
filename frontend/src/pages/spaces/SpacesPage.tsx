@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-
 import {
   AlertCircle,
   Globe2,
@@ -7,7 +6,9 @@ import {
   Plus,
   Search,
   Sparkles,
+  X,
 } from "lucide-react";
+
 import Spaces3D from "@/components/spaces/Space3D";
 import type { SpaceResponse } from "@/api/types";
 
@@ -20,273 +21,242 @@ import { DeleteSpaceDialog } from "@/components/spaces/DeleteSpaceDialog";
 import { SpacesSkeleton } from "@/components/spaces/SpacesSkeleton";
 import { EmptySpaces } from "@/components/spaces/EmptySpaces";
 
+type VisibilityFilter = "ALL" | "PUBLIC" | "PRIVATE";
+
 export default function SpacesPage() {
   const { data: spaces = [], isLoading, isError, refetch } = useSpaces();
 
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<VisibilityFilter>("ALL");
 
   const [createOpen, setCreateOpen] = useState(false);
-
   const [editingSpace, setEditingSpace] = useState<SpaceResponse | null>(null);
-
   const [deletingSpace, setDeletingSpace] = useState<SpaceResponse | null>(
     null,
+  );
+
+  const publicSpaces = useMemo(
+    () => spaces.filter((space) => space.visibility === "PUBLIC").length,
+    [spaces],
+  );
+
+  const privateSpaces = useMemo(
+    () => spaces.filter((space) => space.visibility === "PRIVATE").length,
+    [spaces],
   );
 
   const filteredSpaces = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) {
-      return spaces;
-    }
-
     return spaces.filter((space) => {
-      return (
+      const matchesSearch =
+        !query ||
         space.name.toLowerCase().includes(query) ||
-        space.description?.toLowerCase().includes(query)
-      );
+        space.description?.toLowerCase().includes(query);
+
+      const matchesFilter =
+        filter === "ALL" ||
+        (filter === "PUBLIC" && space.visibility === "PUBLIC") ||
+        (filter === "PRIVATE" && space.visibility === "PRIVATE");
+
+      return matchesSearch && matchesFilter;
     });
-  }, [spaces, search]);
-
-  const publicSpaces = spaces.filter(
-    (space) => space.visibility === "PUBLIC",
-  ).length;
-
-  const privateSpaces = spaces.filter(
-    (space) => space.visibility === "PRIVATE",
-  ).length;
-
-  const handleEdit = (space: SpaceResponse) => {
-    setEditingSpace(space);
-  };
-
-  const handleDelete = (space: SpaceResponse) => {
-    setDeletingSpace(space);
-  };
-
-  const handleCreateOpen = () => {
-    setCreateOpen(true);
-  };
-
-  const handleCreateClose = (open: boolean) => {
-    setCreateOpen(open);
-  };
-
-  const handleEditClose = (open: boolean) => {
-    if (!open) {
-      setEditingSpace(null);
-    }
-  };
-
-  const handleDeleteClose = (open: boolean) => {
-    if (!open) {
-      setDeletingSpace(null);
-    }
-  };
+  }, [spaces, search, filter]);
 
   return (
-    <>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
-          {/* Background glow */}
-          <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-primary/10 blur-3xl" />
+    <div className="space-y-6 pb-10">
+      {/* Integrated Header Banner with Search & Filters */}
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-6 sm:p-8 backdrop-blur-md shadow-sm">
+        {/* Glow accent */}
+        <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-primary/10 blur-3xl" />
 
-          <div className="relative flex flex-col gap-8 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-            {/* Content */}
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-primary">
-                  Workspace
-                </span>
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex-1 space-y-4">
+            {/* Title & Badge Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Sparkles className="size-3.5" />
+                <span>Workspace</span>
               </div>
-
-              <h1 className="mt-2 text-3xl font-bold ">Spaces</h1>
-
-              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Organize your projects, teams, and tasks into dedicated spaces.
-              </p>
 
               <button
                 type="button"
-                onClick={handleCreateOpen}
-                className="mt-6 flex w-fit items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+                onClick={() => setCreateOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 lg:hidden"
               >
                 <Plus className="size-4" />
                 Create Space
               </button>
             </div>
 
-            {/* CSS 3D Visual */}
-            <div className="hidden lg:block">
-              <Spaces3D />
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        {!isLoading && !isError && spaces.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Total Spaces</p>
-
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Sparkles className="size-4" />
-                </div>
-              </div>
-
-              <p className="mt-3 text-2xl font-bold">{spaces.length}</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Public</p>
-
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Globe2 className="size-4" />
-                </div>
-              </div>
-
-              <p className="mt-3 text-2xl font-bold text-primary">
-                {publicSpaces}
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Spaces
+              </h1>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Organize your projects, teams, and tasks into dedicated spaces.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Private</p>
+            {/* Embedded Search Bar & Filter Controls */}
+            {!isLoading && spaces.length > 0 && (
+              <div className="pt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Search Bar Input */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search spaces..."
+                    className="h-10 w-full rounded-xl border border-border/80 bg-background/80 pl-10 pr-9 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
 
-                <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <Lock className="size-4" />
+                {/* Visibility Filter Segment Buttons */}
+                <div className="flex items-center rounded-xl border border-border/80 bg-background/60 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilter("ALL")}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                      filter === "ALL"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    All ({spaces.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter("PUBLIC")}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                      filter === "PUBLIC"
+                        ? "bg-sky-500/15 text-sky-600 dark:text-sky-400 shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Globe2 className="size-3" />
+                    Public ({publicSpaces})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter("PRIVATE")}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                      filter === "PRIVATE"
+                        ? "bg-slate-500/15 text-slate-700 dark:text-slate-300 shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Lock className="size-3" />
+                    Private ({privateSpaces})
+                  </button>
                 </div>
               </div>
-
-              <p className="mt-3 text-2xl font-bold">{privateSpaces}</p>
-            </div>
+            )}
           </div>
-        )}
 
-        {/* Search */}
-        {!isLoading && spaces.length > 0 && (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full max-w-md">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search spaces..."
-                className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            <p className="text-sm text-muted-foreground">
-              {filteredSpaces.length}{" "}
-              {filteredSpaces.length === 1 ? "space" : "spaces"}
-            </p>
-          </div>
-        )}
-
-        {/* Loading */}
-        {isLoading && <SpacesSkeleton />}
-
-        {/* Error */}
-        {!isLoading && isError && (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="size-6 text-destructive" />
-            </div>
-
-            <h2 className="mt-4 text-lg font-semibold">
-              Failed to load spaces
-            </h2>
-
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Something went wrong while loading your spaces. Please try again.
-            </p>
-
+          {/* Desktop Create Action & 3D Visual */}
+          <div className="hidden lg:flex lg:flex-col lg:items-end lg:gap-4 shrink-0">
             <button
               type="button"
-              onClick={() => refetch()}
-              className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
             >
-              Try Again
+              <Plus className="size-4" />
+              Create Space
+            </button>
+            <Spaces3D />
+          </div>
+        </div>
+      </section>
+
+      {/* Main Grid Content */}
+      {isLoading && <SpacesSkeleton />}
+
+      {!isLoading && isError && (
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-destructive/20 bg-destructive/5 px-6 py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="size-6 text-destructive" />
+          </div>
+          <h2 className="mt-4 text-lg font-semibold">Failed to load spaces</h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            Something went wrong while fetching your workspaces.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {!isLoading && !isError && spaces.length === 0 && <EmptySpaces />}
+
+      {!isLoading &&
+        !isError &&
+        spaces.length > 0 &&
+        filteredSpaces.length === 0 && (
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border px-6 py-16 text-center bg-card/30">
+            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <Search className="size-5 text-muted-foreground" />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold">
+              No matching spaces found
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              No spaces match your active filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setFilter("ALL");
+              }}
+              className="mt-5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted"
+            >
+              Clear Search & Filters
             </button>
           </div>
         )}
 
-        {/* Empty */}
-        {!isLoading && !isError && spaces.length === 0 && <EmptySpaces />}
+      {!isLoading && !isError && filteredSpaces.length > 0 && (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredSpaces.map((space) => (
+            <SpaceCard
+              key={space.id}
+              space={space}
+              onEdit={setEditingSpace}
+              onDelete={setDeletingSpace}
+            />
+          ))}
+        </div>
+      )}
 
-        {/* No Search Results */}
-        {!isLoading &&
-          !isError &&
-          spaces.length > 0 &&
-          filteredSpaces.length === 0 && (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                <Search className="size-5 text-muted-foreground" />
-              </div>
+      {/* Dialog Modals */}
+      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} />
 
-              <h2 className="mt-4 text-lg font-semibold">No spaces found</h2>
-
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                No spaces match "{search}".
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="mt-5 rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition hover:bg-muted"
-              >
-                Clear Search
-              </button>
-            </div>
-          )}
-
-        {/* Spaces */}
-        {!isLoading && !isError && filteredSpaces.length > 0 && (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredSpaces.map((space) => (
-              <SpaceCard
-                key={space.id}
-                space={space}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Create */}
-      <CreateSpaceDialog open={createOpen} onOpenChange={handleCreateClose} />
-
-      {/* Edit */}
       <EditSpaceDialog
         open={!!editingSpace}
-        onOpenChange={handleEditClose}
+        onOpenChange={(open) => !open && setEditingSpace(null)}
         space={editingSpace}
       />
 
-      {/* Delete */}
       <DeleteSpaceDialog
         open={!!deletingSpace}
-        onOpenChange={handleDeleteClose}
+        onOpenChange={(open) => !open && setDeletingSpace(null)}
         space={deletingSpace}
       />
-    </>
+    </div>
   );
 }

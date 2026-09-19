@@ -1,6 +1,6 @@
 package com.badr.teamprojectmanagement.team;
 
-import com.badr.teamprojectmanagement.common.enums.TeamJoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -18,11 +18,11 @@ public interface TeamJoinRequestRepository
 
     List<TeamJoinRequest> findByTeamIdAndStatus(
             UUID teamId,
-            TeamJoinRequestStatus status
+            RequestStatus status
     );
 
     List<TeamJoinRequest> findByUserIdAndStatus(
             UUID userId,
-            TeamJoinRequestStatus status
+            RequestStatus status
     );
 }

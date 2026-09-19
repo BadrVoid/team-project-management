@@ -10,7 +10,6 @@ export interface GlobalResponse<T> {
   data: T;
   timestamp: string;
 }
-
 // =========================
 // Auth
 // =========================
@@ -65,6 +64,7 @@ export interface UserSummaryResponse {
   email: string;
 }
 
+
 export interface UserResponse {
   id: string;
   firstName: string;
@@ -74,6 +74,18 @@ export interface UserResponse {
   verified: boolean;
   banned: boolean;
 }
+
+export interface UserDiscoveryResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  bio: string | null;
+  avatarUrl: string | null;
+  skills: string[];
+  tags: string[];
+}
+
 
 // =========================
 // Space
@@ -102,7 +114,6 @@ export interface PublicSpaceResponse {
 // =========================
 // Project
 // =========================
-
 export type ProjectStatus =
   | "PLANNING"
   | "ACTIVE"
@@ -121,9 +132,20 @@ export interface ProjectResponse {
 }
 
 export interface ProjectMemberResponse {
-  user: UserSummaryResponse;
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
   role: "OWNER" | "MANAGER" | "MEMBER";
   status: "PENDING" | "ACCEPTED" | "REJECTED";
+}
+
+export interface UpdateProjectRequest {
+  name: string;
+  description?: string;
+  status?: ProjectStatus;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface TeamSummaryResponse {
@@ -144,6 +166,7 @@ export interface ProjectDetailsResponse {
   teams: TeamSummaryResponse[];
 }
 
+
 // =========================
 // Team
 // =========================
@@ -155,10 +178,27 @@ export interface TeamResponse {
   description: string;
 }
 
-export interface TeamMemberResponse {
-  user: UserSummaryResponse;
-  role: "LEADER" | "MEMBER";
+export interface TeamCreateRequest {
+  projectId: string;
+  name: string;
+  description?: string;
 }
+
+export interface TeamUpdateRequest {
+  name: string;
+  description?: string;
+}
+
+export type TeamMemberRole = "LEADER" | "MEMBER";
+
+export interface TeamMemberResponse {
+  id: string;
+  teamId: string;
+  userId: string;
+  role: TeamMemberRole;
+}
+
+
 
 // =========================
 // Task
@@ -219,3 +259,36 @@ export interface NotificationResponse {
   read: boolean;
   createdAt: string;
 }
+
+// =========================
+// Profile
+// =========================
+export type AuthProvider = "GOOGLE" | "GITHUB";
+
+export interface UserProfileRequest {
+  bio?: string;
+  university?: string;
+  department?: string;
+  avatarUrl?: string;
+  skills?: string[];
+  tags?: string[];
+}
+
+export interface UserProfileResponse {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  authProvider: AuthProvider | null;
+  bio: string | null;
+  university: string | null;
+  department: string | null;
+  avatarUrl: string | null;
+  skills: string[];
+  tags: string[];
+}
+
+
+
+export type ProjectMemberRole = "OWNER" | "MANAGER" | "MEMBER"; export interface ProjectMemberRequest { userId: string; role: ProjectMemberRole; } export interface ProjectMemberResponse { id: string; userId: string; firstName: string; lastName: string; role: ProjectMemberRole; status: "PENDING" | "ACCEPTED" | "REJECTED"; }

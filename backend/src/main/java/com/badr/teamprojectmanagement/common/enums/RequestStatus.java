@@ -1,7 +1,7 @@
 package com.badr.teamprojectmanagement.common.enums;
 
 
-public enum JoinRequestStatus {
+public enum RequestStatus {
     PENDING,
     ACCEPTED,
     REJECTED

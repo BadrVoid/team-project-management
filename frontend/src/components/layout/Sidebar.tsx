@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import {
   Bell,
-  CheckSquare,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -10,36 +9,21 @@ import {
   FolderKanban,
   LayoutDashboard,
   Settings,
-  Users,
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 
-const navigation = [
+const NAVIGATION = [
   {
-    title: "Projects",
-    href: "/projects",
+    title: "WorkSpace",
+    href: "/workspace",
     icon: FolderKanban,
-  },
-  {
-    title: "Teams",
-    href: "/teams",
-    icon: Users,
-  },
-  {
-    title: "Tasks",
-    href: "/tasks",
-    icon: CheckSquare,
-  },
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: Bell,
   },
 ];
 
-const spaceNavigation = [
+const SPACE_NAVIGATION = [
   {
     title: "My Spaces",
     href: "/spaces",
@@ -56,18 +40,14 @@ export default function Sidebar() {
   const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const [isSpacesOpen, setIsSpacesOpen] = useState(
-    location.pathname.startsWith("/spaces"),
-  );
-
-  useEffect(() => {
-    if (location.pathname.startsWith("/spaces")) {
-      setIsSpacesOpen(true);
-    }
-  }, [location.pathname]);
+  const [isSpacesOpen, setIsSpacesOpen] = useState(false);
 
   const isSpacesActive = location.pathname.startsWith("/spaces");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsSpacesOpen(isSpacesActive);
+  }, [location.pathname, isSpacesActive]);
 
   return (
     <aside
@@ -83,7 +63,7 @@ export default function Sidebar() {
       >
         <div className="flex min-w-0 items-center gap-3">
           {/* Logo */}
-          <div className="size-9 shrink-0 overflow-hidden rounded-xl">
+          <div className="size-9 shrink-0 overflow-hidden rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.2)]">
             <svg
               width="100%"
               height="100%"
@@ -141,14 +121,13 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Collapse Button */}
+      {/* Collapse Toggle */}
       <Button
         type="button"
         variant="outline"
         size="icon"
-        onClick={() => setIsCollapsed((previous) => !previous)}
-        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute -right-3 top-[18px] z-20 size-6 rounded-full border bg-background shadow-sm transition-all hover:bg-muted"
+        onClick={() => setIsCollapsed((prev) => !prev)}
+        className="absolute -right-3 top-[18px] z-20 size-6 rounded-full border bg-background shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-all hover:scale-105"
       >
         {isCollapsed ? (
           <ChevronRight className="size-3.5" />
@@ -164,49 +143,42 @@ export default function Sidebar() {
           to="/dashboard"
           title={isCollapsed ? "Dashboard" : undefined}
           className={({ isActive }) =>
-            `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+            `relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-200 ${
               isCollapsed ? "justify-center" : "gap-3 px-3"
             } ${
               isActive
-                ? "border-l-4 border-l-primary bg-primary/10 text-primary"
+                ? "border border-primary/20 bg-primary/10 text-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             }`
           }
         >
-          {({ isActive }) => (
-            <>
-              <LayoutDashboard
-                className={`size-[18px] ${
-                  isActive ? "text-primary" : "hover:scale-105"
-                }`}
-              />
+          <LayoutDashboard className="size-[18px] shrink-0" />
 
-              <span
-                className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                }`}
-              >
-                Dashboard
-              </span>
-            </>
-          )}
+          <span
+            className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+              isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            }`}
+          >
+            Dashboard
+          </span>
         </NavLink>
 
         {/* Spaces */}
         <div>
           <div
-            className={`flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-200 ${
+              isCollapsed ? "justify-center" : "gap-3 px-3"
+            } ${
               isSpacesActive
-                ? "bg-primary/10 text-primary"
+                ? "border border-primary/20 bg-primary/10 text-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             }`}
           >
-            {/* Spaces Link */}
             <NavLink
               to="/spaces"
               title={isCollapsed ? "Spaces" : undefined}
-              className={`relative flex h-full min-w-0 flex-1 items-center rounded-lg ${
-                isCollapsed ? "justify-center" : "gap-3 px-3"
+              className={`relative flex h-full min-w-0 flex-1 items-center ${
+                isCollapsed ? "justify-center" : "gap-3"
               }`}
             >
               <FolderKanban className="size-[18px] shrink-0" />
@@ -220,13 +192,12 @@ export default function Sidebar() {
               </span>
             </NavLink>
 
-            {/* Spaces Toggle */}
             {!isCollapsed && (
               <button
                 type="button"
-                onClick={() => setIsSpacesOpen((previous) => !previous)}
+                onClick={() => setIsSpacesOpen((prev) => !prev)}
                 aria-label={isSpacesOpen ? "Collapse Spaces" : "Expand Spaces"}
-                className="mr-2 flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-primary/10"
+                className="flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-primary/20"
               >
                 <ChevronDown
                   className={`size-4 transition-transform duration-200 ${
@@ -237,18 +208,18 @@ export default function Sidebar() {
             )}
           </div>
 
-          {/* Spaces Submenu */}
+          {/* Spaces submenu */}
           {!isCollapsed && (
             <div
-              className={`grid transition-[grid-template-rows,opacity] duration-300 ${
+              className={`grid transition-all duration-300 ${
                 isSpacesOpen
                   ? "grid-rows-[1fr] opacity-100"
                   : "grid-rows-[0fr] opacity-0"
               }`}
             >
               <div className="min-h-0 overflow-hidden">
-                <div className="ml-6 mt-1 space-y-1 border-l border-border pl-3">
-                  {spaceNavigation.map((item) => {
+                <div className="ml-6 mt-1.5 space-y-1 pl-3">
+                  {SPACE_NAVIGATION.map((item) => {
                     const Icon = item.icon;
 
                     return (
@@ -257,14 +228,14 @@ export default function Sidebar() {
                         to={item.href}
                         end={item.href === "/spaces"}
                         className={({ isActive }) =>
-                          `flex h-9 items-center gap-2 rounded-lg px-3 text-sm transition-colors ${
+                          `flex h-9 items-center gap-2 rounded-lg px-3 text-sm transition-all duration-200 ${
                             isActive
-                              ? "bg-primary/10 font-medium text-primary"
+                              ? "border border-primary/20 bg-primary/10 text-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
                               : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                           }`
                         }
                       >
-                        <Icon className="size-4" />
+                        <Icon className="size-4 shrink-0" />
 
                         <span>{item.title}</span>
                       </NavLink>
@@ -276,8 +247,8 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Other Navigation */}
-        {navigation.map((item) => {
+        {/* Projects + Notifications */}
+        {NAVIGATION.map((item) => {
           const Icon = item.icon;
 
           return (
@@ -286,71 +257,28 @@ export default function Sidebar() {
               to={item.href}
               title={isCollapsed ? item.title : undefined}
               className={({ isActive }) =>
-                `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+                `relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-200 ${
                   isCollapsed ? "justify-center" : "gap-3 px-3"
                 } ${
                   isActive
-                    ? "border-l-4 border-l-primary bg-primary/10 text-primary"
+                    ? "border border-primary/20 bg-primary/10 text-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
                     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    className={`size-[18px] transition-transform duration-200 ${
-                      isActive ? "text-primary" : "hover:scale-105"
-                    }`}
-                  />
-
-                  <span
-                    className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                      isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                    }`}
-                  >
-                    {item.title}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Bottom Section */}
-      <div className="border-t p-3">
-        <NavLink
-          to="/settings"
-          title={isCollapsed ? "Settings" : undefined}
-          className={({ isActive }) =>
-            `relative flex h-10 items-center rounded-lg text-sm font-medium transition-all duration-200 ${
-              isCollapsed ? "justify-center" : "gap-3 px-3"
-            } ${
-              isActive
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {isActive && (
-                <span className="absolute left-0 h-5 w-0.5 rounded-full bg-primary" />
-              )}
-
-              <Settings className="size-[18px]" />
+              <Icon className="size-[18px] shrink-0" />
 
               <span
                 className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
                   isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                 }`}
               >
-                Settings
+                {item.title}
               </span>
-            </>
-          )}
-        </NavLink>
-      </div>
+            </NavLink>
+          );
+        })}
+      </nav>
     </aside>
   );
 }

@@ -1,5 +1,7 @@
+
 package com.badr.teamprojectmanagement.user.profile.dtos;
 
+import com.badr.teamprojectmanagement.auth.AuthProvider;
 import com.badr.teamprojectmanagement.common.enums.UserRole;
 
 import java.util.List;
@@ -17,6 +19,8 @@ public record UserProfileResponse(
 
         UserRole role,
 
+        AuthProvider authProvider,
+
         String bio,
 
         String university,
@@ -30,3 +34,4 @@ public record UserProfileResponse(
         List<String> tags
 ) {
 }
+

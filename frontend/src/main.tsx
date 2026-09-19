@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import { AuthProvider } from "@/context/AuthContext";
 import "./index.css";
-
+import { ThemeProvider } from 'next-themes'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -28,7 +28,9 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <App />
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

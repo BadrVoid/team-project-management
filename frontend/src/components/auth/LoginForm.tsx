@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useLogin } from "@/hooks/auth.hooks";
+import { useLogin } from "@/hooks/useAuth";
 import { useAuth } from "@/context/AuthContext";
 
 type LoginFormProps = {

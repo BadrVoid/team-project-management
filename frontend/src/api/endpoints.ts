@@ -19,13 +19,30 @@ export const endpoints = {
     join: (id: string) => `/spaces/${id}/join`,
   },
 
+
   projects: {
+    create: "/projects",
     bySpace: (spaceId: string) => `/projects/space/${spaceId}`,
     byId: (id: string) => `/projects/${id}`,
     details: (id: string) => `/projects/${id}/details`,
+
+    members: (projectId: string) =>
+      `/projects/${projectId}/members`,
+
+    inviteMember: (projectId: string) =>
+      `/projects/${projectId}/members`,
+
+    removeMember: (projectId: string, userId: string) =>
+      `/projects/${projectId}/members/${userId}`,
+
+    updateMemberRole: (projectId: string, userId: string) =>
+      `/projects/${projectId}/members/${userId}/role`,
   },
 
+
+
   teams: {
+    create: "/teams",
     byProject: (projectId: string) => `/teams/project/${projectId}`,
     byId: (id: string) => `/teams/${id}`,
   },
@@ -52,4 +69,5 @@ export const endpoints = {
     byId: (id: string) => `/users/${id}`,
     discover: "/users/discover",
   },
+  profiles: { me: "/profiles/me", },
 };

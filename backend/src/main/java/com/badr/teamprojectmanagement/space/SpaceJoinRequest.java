@@ -1,7 +1,7 @@
 package com.badr.teamprojectmanagement.space;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
-import com.badr.teamprojectmanagement.common.enums.SpaceJoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.SpaceRequestStatus;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,6 +42,6 @@ public class SpaceJoinRequest extends BaseEntity {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private SpaceJoinRequestStatus status =
-            SpaceJoinRequestStatus.PENDING;
+    private SpaceRequestStatus status =
+            SpaceRequestStatus.PENDING;
 }

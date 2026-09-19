@@ -1,7 +1,7 @@
 package com.badr.teamprojectmanagement.project;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
-import com.badr.teamprojectmanagement.common.enums.JoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,5 +34,5 @@ public class ProjectJoinRequest extends BaseEntity {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private JoinRequestStatus status = JoinRequestStatus.PENDING;
+    private RequestStatus status = RequestStatus.PENDING;
 }

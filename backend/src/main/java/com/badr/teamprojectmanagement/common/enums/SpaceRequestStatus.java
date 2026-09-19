@@ -1,5 +1,5 @@
 package com.badr.teamprojectmanagement.common.enums;
 
-public enum SpaceMembershipStatus {
+public enum SpaceRequestStatus {
     NONE, PENDING, MEMBER, OWNER
 }

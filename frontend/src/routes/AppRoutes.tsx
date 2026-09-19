@@ -4,39 +4,94 @@ import AuthPage from "@/pages/auth/AuthPage";
 import OAuthCallback from "@/pages/auth/OAuthCallback";
 
 import AppLayout from "@/components/layout/AppLayout";
-import PublicSpacesPage from "@/pages/spaces/PublicSpacesPage";
+
 import DashboardPage from "@/pages/dashboard/DashboardPage";
+
 import SpacesPage from "@/pages/spaces/SpacesPage";
-import ProtectedRoute from "@/routes/ProtectedRoute";
+import PublicSpacesPage from "@/pages/spaces/PublicSpacesPage";
 import SpaceDetailsPage from "@/pages/spaces/SpaceDetailsPage";
+
+import WorkspacePage from "@/pages/workspace/WorkspacePage";
+import ProjectDetailsPage from "@/pages/projects/ProjectDetailsPage";
+
+import NotificationsPage from "@/pages/notifications/NotificationsPage";
+
+import ProtectedRoute from "@/routes/ProtectedRoute";
+import SettingsPage from "@/pages/settings/SettingsPage";
+import TeamDetailsPage from "@/pages/teams/TeamDetailsPage";
+import ProfilePage from "@/pages/profile/ProfilePage";
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Public */}
+      {/* =========================
+          Public Routes
+      ========================= */}
+
       <Route path="/auth" element={<AuthPage />} />
+
       <Route path="/oauth/callback" element={<OAuthCallback />} />
 
-      {/* Protected */}
+      {/* =========================
+          Protected Routes
+      ========================= */}
+
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
+          {/* Dashboard */}
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/spaces/discover" element={<PublicSpacesPage />} />
-          <Route path="/spaces/:spaceId" element={<SpaceDetailsPage />} />
+
+          {/* =========================
+              Spaces
+          ========================= */}
+
           <Route path="/spaces" element={<SpacesPage />} />
-          <Route path="/projects" element={<div>Projects</div>} />
 
-          <Route path="/teams" element={<div>Teams</div>} />
+          <Route path="/spaces/discover" element={<PublicSpacesPage />} />
 
-          <Route path="/tasks" element={<div>Tasks</div>} />
+          <Route path="/spaces/:spaceId" element={<SpaceDetailsPage />} />
 
-          <Route path="/notifications" element={<div>Notifications</div>} />
+          {/* =========================
+              Workspace
+          ========================= */}
 
-          <Route path="/settings" element={<div>Settings</div>} />
+          <Route path="/workspace" element={<WorkspacePage />} />
+
+          {/* =========================
+              Project Details
+          ========================= */}
+
+          <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+
+          {/* =========================
+              Notifications
+          ========================= */}
+
+          <Route path="/notifications" element={<NotificationsPage />} />
+
+          {/* =========================
+              Settings
+          ========================= */}
+
+          <Route path="/settings" element={<SettingsPage />} />
+
+          {/* =========================
+              Profile
+          ========================= */}
+          <Route path="/profile" element={<ProfilePage />} />
+
+          <Route path="/teams/:id" element={<TeamDetailsPage />} />
         </Route>
       </Route>
 
-      {/* Redirects */}
+      {/* =========================
+          Default Redirect
+      ========================= */}
+
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+      {/* =========================
+          Unknown Route
+      ========================= */}
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

@@ -1,7 +1,7 @@
 package com.badr.teamprojectmanagement.project;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
-import com.badr.teamprojectmanagement.common.enums.MembershipStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.ProjectMemberRole;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
@@ -32,7 +32,7 @@ public class ProjectMember extends BaseEntity {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private MembershipStatus status = MembershipStatus.ACCEPTED;
+    private RequestStatus status = RequestStatus.ACCEPTED;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

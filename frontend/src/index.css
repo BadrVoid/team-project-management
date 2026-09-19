@@ -36,7 +36,7 @@
   font-display: swap;
 }
 
-/* BASE */
+/* Base */
 
 :root {
   /* Font — Updated to use Oswald with fallback */
@@ -71,30 +71,39 @@
   --destructive: #dc4c4c;
   --destructive-foreground: #ffffff;
 }
-[data-theme="dark"] {
-  --background: #0b0909;
-  --foreground: #f3f5f4;
 
-  --card: #121817;
-  --card-foreground: #f3f5f4;
+/* 2. Target both .dark class and [data-theme="dark"] for next-themes compatibility */
+.dark {
+  /* Surface Layers (Deep Teal Tinted Blacks for rich depth) */
+  --background: #090c0c;
+  --foreground: #f0f4f3;
 
-  --primary: #408175;
-  --primary-foreground: #ffffff;
+  --card: #111716;
+  --card-foreground: #f0f4f3;
 
-  --secondary: #2e4540;
-  --secondary-foreground: #ffffff;
+  /* Primary Brand (Vibrant Teal for strong UI presence) */
+  --primary: #38a390;
+  --primary-foreground: #081714;
 
-  --muted: #172320;
-  --muted-foreground: #9aa9a5;
+  /* Secondary Elements & Badges */
+  --secondary: #1a2a27;
+  --secondary-foreground: #a3c7c0;
 
-  --accent: #b5b9f0;
-  --accent-foreground: #25243a;
+  /* Muted States & Secondary Text */
+  --muted: #15201d;
+  --muted-foreground: #829590;
 
-  --border: #263a36;
-  --input: #263a36;
-  --ring: #408175;
+  /* Accent (Soft Mint Glow that complements the Primary) */
+  --accent: #263834;
+  --accent-foreground: #70d6c3;
 
-  --destructive: #e63946;
+  /* Form Elements & Structural Lines */
+  --border: #1e302c;
+  --input: #1e302c;
+  --ring: #38a390;
+
+  /* Destructive States (Slightly desaturated Red for reduced eye strain) */
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 }
 

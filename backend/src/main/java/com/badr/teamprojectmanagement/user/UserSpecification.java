@@ -47,6 +47,94 @@ public final class UserSpecification {
                 cb.equal(root.get("role"), role);
     }
 
+    public static Specification<User> discoveryKeyword(String keyword) {
+
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        String search = "%" + keyword.trim().toLowerCase() + "%";
+
+        return (root, query, cb) -> {
+
+            query.distinct(true);
+
+            /*
+             * Name / email search
+             */
+            var nameOrEmail = cb.or(
+                    cb.like(
+                            cb.lower(root.get("firstName")),
+                            search
+                    ),
+                    cb.like(
+                            cb.lower(root.get("lastName")),
+                            search
+                    ),
+                    cb.like(
+                            cb.lower(root.get("email")),
+                            search
+                    )
+            );
+
+            /*
+             * Search inside profile skills.
+             */
+            var skillSubquery = query.subquery(Integer.class);
+
+            var skillProfile = skillSubquery.from(UserProfile.class);
+
+            ListJoin<UserProfile, String> skills =
+                    skillProfile.joinList("skills", JoinType.INNER);
+
+            skillSubquery
+                    .select(cb.literal(1))
+                    .where(
+                            cb.and(
+                                    cb.equal(
+                                            skillProfile.get("user"),
+                                            root
+                                    ),
+                                    cb.like(
+                                            cb.lower(skills),
+                                            search
+                                    )
+                            )
+                    );
+
+            /*
+             * Search inside profile tags.
+             */
+            var tagSubquery = query.subquery(Integer.class);
+
+            var tagProfile = tagSubquery.from(UserProfile.class);
+
+            ListJoin<UserProfile, String> tags =
+                    tagProfile.joinList("tags", JoinType.INNER);
+
+            tagSubquery
+                    .select(cb.literal(1))
+                    .where(
+                            cb.and(
+                                    cb.equal(
+                                            tagProfile.get("user"),
+                                            root
+                                    ),
+                                    cb.like(
+                                            cb.lower(tags),
+                                            search
+                                    )
+                            )
+                    );
+
+            return cb.or(
+                    nameOrEmail,
+                    cb.exists(skillSubquery),
+                    cb.exists(tagSubquery)
+            );
+        };
+    }
+
     public static Specification<User> isVerified(Boolean verified) {
 
         if (verified == null) {

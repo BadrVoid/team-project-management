@@ -7,6 +7,7 @@ import com.badr.teamprojectmanagement.project.ProjectMapper;
 import com.badr.teamprojectmanagement.project.ProjectMemberRepository;
 import com.badr.teamprojectmanagement.project.ProjectRepository;
 import com.badr.teamprojectmanagement.project.dtos.*;
+import com.badr.teamprojectmanagement.security.SecurityUtils;
 import com.badr.teamprojectmanagement.space.Space;
 import com.badr.teamprojectmanagement.space.SpaceRepository;
 import com.badr.teamprojectmanagement.team.TeamRepository;
@@ -33,54 +34,45 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectMapper projectMapper;
 
+
     @Override
-    public ProjectResponse createProject(
-            UUID userId,
-            ProjectCreateRequest request
-    ) {
+    public ProjectResponse createProject(ProjectCreateRequest request) {
 
-        //Find space
-        Space space = spaceRepository.findById(request.spaceId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Space not found")
-                );
+        UUID userId = SecurityUtils.getCurrentUserId();
 
-        //Find creator
-        User creator = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found")
-                );
+        // Find space
+        Space space = spaceRepository
+                .findById(request.spaceId()).
+                orElseThrow(() -> new ResourceNotFoundException("Space not found"));
 
-        //Create project
+        // Find creator
+        User creator = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Create project
         Project project = Project.builder()
-                .space(space)
-                .name(request.name())
+                .space(space).
+                name(request.name())
                 .description(request.description())
-                .status(
-                        request.status() != null
-                                ? request.status()
-                                : ProjectStatus.PLANNING
-                )
+                .status(request.status() != null ? request.status() : ProjectStatus.PLANNING)
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .createdBy(creator)
-                .build();
+                .createdBy(creator).build();
 
-        //Save project
+        // Save project
         projectRepository.save(project);
 
         return mapToResponse(project);
     }
+
 
     @Override
     @Transactional(readOnly = true)
     public ProjectResponse getProjectById(UUID id) {
 
         //Find project
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Project not found")
-                );
+        Project project = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         return mapToResponse(project);
     }
@@ -90,29 +82,17 @@ public class ProjectServiceImpl implements ProjectService {
     public List<ProjectResponse> getProjectsBySpace(UUID spaceId) {
 
         //Find space
-        Space space = spaceRepository.findById(spaceId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Space not found")
-                );
+        Space space = spaceRepository.findById(spaceId).orElseThrow(() -> new ResourceNotFoundException("Space not found"));
 
         //Find projects
-        return projectRepository.findBySpace(space)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+        return projectRepository.findBySpace(space).stream().map(this::mapToResponse).toList();
     }
 
     @Override
-    public ProjectResponse updateProject(
-            UUID id,
-            ProjectUpdateRequest request
-    ) {
+    public ProjectResponse updateProject(UUID id, ProjectUpdateRequest request) {
 
         //Find project
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Project not found")
-                );
+        Project project = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         //Update project information
         project.setName(request.name());
@@ -140,39 +120,17 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(readOnly = true)
     public ProjectDetailsResponse getProjectDetails(UUID id) {
 
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Project not found"));
+        Project project = projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
-        List<ProjectMemberResponse> members =
-                projectMemberRepository.findByProject(project)
-                        .stream()
-                        .map(projectMapper::toMemberResponse)
-                        .toList();
+        List<ProjectMemberResponse> members = projectMemberRepository.findByProject(project).stream().map(projectMapper::toMemberResponse).toList();
 
-        List<TeamSummaryResponse> teams =
-                teamRepository.findByProjectId(project.getId())
-                        .stream()
-                        .map(projectMapper::toTeamSummaryResponse)
-                        .toList();
+        List<TeamSummaryResponse> teams = teamRepository.findByProjectId(project.getId()).stream().map(projectMapper::toTeamSummaryResponse).toList();
 
-        return projectMapper.toDetailsResponse(
-                project,
-                members,
-                teams
-        );
+        return projectMapper.toDetailsResponse(project, members, teams);
     }
+
     private ProjectResponse mapToResponse(Project project) {
 
-        return new ProjectResponse(
-                project.getId(),
-                project.getSpace().getId(),
-                project.getName(),
-                project.getDescription(),
-                project.getStatus(),
-                project.getStartDate(),
-                project.getEndDate(),
-                project.getCreatedBy().getId()
-        );
+        return new ProjectResponse(project.getId(), project.getSpace().getId(), project.getName(), project.getDescription(), project.getStatus(), project.getStartDate(), project.getEndDate(), project.getCreatedBy().getId());
     }
 }

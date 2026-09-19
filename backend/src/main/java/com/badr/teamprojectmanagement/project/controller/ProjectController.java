@@ -1,3 +1,4 @@
+
 package com.badr.teamprojectmanagement.project.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
@@ -24,11 +25,10 @@ public class ProjectController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public GlobalResponse<ProjectResponse> createProject(
-            @RequestParam UUID userId,
             @Valid @RequestBody ProjectCreateRequest request
     ) {
         ProjectResponse response =
-                projectService.createProject(userId, request);
+                projectService.createProject(request);
 
         return GlobalResponse.success(
                 "Project created successfully",

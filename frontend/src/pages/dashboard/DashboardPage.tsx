@@ -296,8 +296,8 @@ export default function DashboardPage() {
             WORKSPACE
           </p>
 
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Good evening, Badr
+          <h1 className="text-3xl uppercase font-bold tracking-tight md:text-4xl">
+            Welcome
           </h1>
 
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">

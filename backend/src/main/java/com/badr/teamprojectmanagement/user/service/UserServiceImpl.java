@@ -57,16 +57,14 @@ public class UserServiceImpl implements UserService {
             String tag,
             Pageable pageable
     ) {
-
         Specification<User> specification =
                 Specification.where(
-                                UserSpecification.keyword(keyword)
+                                UserSpecification.discoveryKeyword(keyword)
                         )
                         .and(UserSpecification.skill(skill))
                         .and(UserSpecification.tag(tag));
 
-        return userRepository
-                .findAll(specification, pageable)
+        return userRepository.findAll(specification, pageable)
                 .map(userMapper::toDiscoveryResponse);
     }
 

@@ -1,6 +1,6 @@
 package com.badr.teamprojectmanagement.project.dtos;
 
-import com.badr.teamprojectmanagement.common.enums.JoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import lombok.Builder;
 
 import java.util.UUID;
@@ -10,6 +10,6 @@ public record ProjectJoinRequestResponse(
         UUID id,
         UUID projectId,
         UUID userId,
-        JoinRequestStatus status
+        RequestStatus status
 ) {
 }

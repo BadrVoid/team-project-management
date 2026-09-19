@@ -1,7 +1,7 @@
 package com.badr.teamprojectmanagement.team.service;
 
 import com.badr.teamprojectmanagement.common.enums.NotificationType;
-import com.badr.teamprojectmanagement.common.enums.TeamJoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
@@ -67,13 +67,13 @@ public class TeamJoinRequestServiceImpl
 
             TeamJoinRequest request = existingRequest.get();
 
-            if (request.getStatus() == TeamJoinRequestStatus.PENDING) {
+            if (request.getStatus() == RequestStatus.PENDING) {
                 throw new BadRequestException(
                         "Join request is already pending"
                 );
             }
 
-            request.setStatus(TeamJoinRequestStatus.PENDING);
+            request.setStatus(RequestStatus.PENDING);
 
             joinRequestRepository.save(request);
 
@@ -83,7 +83,7 @@ public class TeamJoinRequestServiceImpl
         TeamJoinRequest request = TeamJoinRequest.builder()
                 .team(team)
                 .user(user)
-                .status(TeamJoinRequestStatus.PENDING)
+                .status(RequestStatus.PENDING)
                 .build();
 
         TeamJoinRequest savedRequest =
@@ -111,7 +111,7 @@ public class TeamJoinRequestServiceImpl
         return joinRequestRepository
                 .findByTeamIdAndStatus(
                         teamId,
-                        TeamJoinRequestStatus.PENDING
+                        RequestStatus.PENDING
                 )
                 .stream()
                 .map(this::mapToResponse)
@@ -131,7 +131,7 @@ public class TeamJoinRequestServiceImpl
         // Only TEAM LEADER can accept requests
         verifyTeamLeader(teamId, currentUserId);
 
-        if (request.getStatus() != TeamJoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Join request has already been processed"
             );
@@ -158,7 +158,7 @@ public class TeamJoinRequestServiceImpl
         teamMemberRepository.save(member);
 
         request.setStatus(
-                TeamJoinRequestStatus.ACCEPTED
+                RequestStatus.ACCEPTED
         );
 
         joinRequestRepository.save(request);
@@ -179,14 +179,14 @@ public class TeamJoinRequestServiceImpl
         // Only TEAM LEADER can reject requests
         verifyTeamLeader(teamId, currentUserId);
 
-        if (request.getStatus() != TeamJoinRequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException(
                     "Join request has already been processed"
             );
         }
 
         request.setStatus(
-                TeamJoinRequestStatus.REJECTED
+                RequestStatus.REJECTED
         );
 
         joinRequestRepository.save(request);
@@ -233,7 +233,7 @@ public class TeamJoinRequestServiceImpl
             request = existingRequest.get();
 
             if (request.getStatus()
-                    == TeamJoinRequestStatus.PENDING) {
+                    == RequestStatus.PENDING) {
 
                 throw new BadRequestException(
                         "There is already a pending request or invitation"
@@ -241,7 +241,7 @@ public class TeamJoinRequestServiceImpl
             }
 
             request.setStatus(
-                    TeamJoinRequestStatus.PENDING
+                    RequestStatus.PENDING
             );
 
         } else {
@@ -249,7 +249,7 @@ public class TeamJoinRequestServiceImpl
             request = TeamJoinRequest.builder()
                     .team(team)
                     .user(user)
-                    .status(TeamJoinRequestStatus.PENDING)
+                    .status(RequestStatus.PENDING)
                     .build();
         }
 
@@ -281,7 +281,7 @@ public class TeamJoinRequestServiceImpl
         return joinRequestRepository
                 .findByUserIdAndStatus(
                         userId,
-                        TeamJoinRequestStatus.PENDING
+                        RequestStatus.PENDING
                 )
                 .stream()
                 .map(this::mapToResponse)
@@ -304,7 +304,7 @@ public class TeamJoinRequestServiceImpl
         }
 
         if (request.getStatus()
-                != TeamJoinRequestStatus.PENDING) {
+                != RequestStatus.PENDING) {
 
             throw new BadRequestException(
                     "Invitation has already been processed"
@@ -332,7 +332,7 @@ public class TeamJoinRequestServiceImpl
         teamMemberRepository.save(member);
 
         request.setStatus(
-                TeamJoinRequestStatus.ACCEPTED
+                RequestStatus.ACCEPTED
         );
 
         joinRequestRepository.save(request);
@@ -356,7 +356,7 @@ public class TeamJoinRequestServiceImpl
         }
 
         if (request.getStatus()
-                != TeamJoinRequestStatus.PENDING) {
+                != RequestStatus.PENDING) {
 
             throw new BadRequestException(
                     "Invitation has already been processed"
@@ -364,7 +364,7 @@ public class TeamJoinRequestServiceImpl
         }
 
         request.setStatus(
-                TeamJoinRequestStatus.REJECTED
+                RequestStatus.REJECTED
         );
 
         joinRequestRepository.save(request);

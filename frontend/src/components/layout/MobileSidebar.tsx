@@ -1,6 +1,5 @@
 import {
   Bell,
-  CheckSquare,
   ChevronDown,
   Compass,
   FolderKanban,
@@ -8,8 +7,10 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+
 import {
   Sheet,
   SheetContent,
@@ -19,29 +20,9 @@ import {
 
 const navigation = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Projects",
-    href: "/projects",
+    title: "Workspace",
+    href: "/workspace",
     icon: FolderKanban,
-  },
-  {
-    title: "Teams",
-    href: "/teams",
-    icon: Users,
-  },
-  {
-    title: "Tasks",
-    href: "/tasks",
-    icon: CheckSquare,
-  },
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: Bell,
   },
 ];
 
@@ -69,17 +50,18 @@ export default function MobileSidebar({
 }: MobileSidebarProps) {
   const location = useLocation();
 
-  const [isSpacesOpen, setIsSpacesOpen] = useState(
-    location.pathname.startsWith("/spaces"),
-  );
+  const isSpacesActive = location.pathname.startsWith("/spaces");
+
+  const [isSpacesOpen, setIsSpacesOpen] = useState(isSpacesActive);
 
   useEffect(() => {
-    if (location.pathname.startsWith("/spaces")) {
+    if (isSpacesActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSpacesOpen(true);
+    } else {
+      setIsSpacesOpen(false);
     }
-  }, [location.pathname]);
-
-  const isSpacesActive = location.pathname.startsWith("/spaces");
+  }, [location.pathname, isSpacesActive]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -186,9 +168,6 @@ export default function MobileSidebar({
                 <button
                   type="button"
                   onClick={() => setIsSpacesOpen((previous) => !previous)}
-                  aria-label={
-                    isSpacesOpen ? "Collapse Spaces" : "Expand Spaces"
-                  }
                   className="mr-2 flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-primary/10"
                 >
                   <ChevronDown
@@ -237,7 +216,7 @@ export default function MobileSidebar({
               </div>
             </div>
 
-            {/* Other Navigation */}
+            {/* Workspace + Notifications */}
             {navigation.map((item) => {
               const Icon = item.icon;
 
@@ -270,32 +249,6 @@ export default function MobileSidebar({
             })}
           </div>
 
-          {/* Settings */}
-          <div className="mt-auto border-t pt-4">
-            <NavLink
-              to="/settings"
-              onClick={() => onOpenChange(false)}
-              className={({ isActive }) =>
-                `relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "border-l-2 border-l-primary bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Settings
-                    className={`size-[18px] shrink-0 ${
-                      isActive ? "text-primary" : ""
-                    }`}
-                  />
-
-                  <span>Settings</span>
-                </>
-              )}
-            </NavLink>
-          </div>
         </nav>
       </SheetContent>
     </Sheet>

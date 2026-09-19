@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2} from "lucide-react";
 
 import type { SpaceResponse } from "@/api/types";
 import { useUpdateSpace } from "@/hooks/useSpaces";
@@ -54,14 +55,8 @@ export function EditSpaceDialog({
       <div className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl">
         <div className="border-b border-border p-6">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-              <Pencil className="size-5 text-primary" />
-            </div>
-
             <div>
-              <h2 className="text-xl font-semibold">
-                Edit Space
-              </h2>
+              <h2 className="text-xl font-semibold">Edit Space</h2>
 
               <p className="text-sm text-muted-foreground">
                 Update your space information.
@@ -72,9 +67,7 @@ export function EditSpaceDialog({
 
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Space name
-            </label>
+            <label className="text-sm font-medium">Space name</label>
 
             <input
               value={name}
@@ -86,9 +79,7 @@ export function EditSpaceDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Description
-            </label>
+            <label className="text-sm font-medium">Description</label>
 
             <textarea
               value={description}
@@ -121,16 +112,12 @@ export function EditSpaceDialog({
 
             <button
               type="submit"
-              disabled={
-                !name.trim() ||
-                updateSpaceMutation.isPending
-              }
+              disabled={!name.trim() || updateSpaceMutation.isPending}
               className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {updateSpaceMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
-
               Save Changes
             </button>
           </div>

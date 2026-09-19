@@ -10,10 +10,12 @@ import com.badr.teamprojectmanagement.auth.dtos.ResetPasswordRequest;
 import com.badr.teamprojectmanagement.auth.dtos.VerifyOtpRequest;
 import com.badr.teamprojectmanagement.auth.AuthService;
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
+import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -98,10 +100,10 @@ public class AuthController {
 
     @PostMapping("/change-password")
     public ResponseEntity<GlobalResponse<Void>> changePassword(
-            @RequestParam UUID userId,
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        authService.changePassword(userId, request);
+        authService.changePassword(user.getId(), request);
 
         return ResponseEntity.ok(
                 GlobalResponse.success("Password changed successfully", null)

@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 
 import { useMutation } from "@tanstack/react-query";
 
@@ -33,3 +32,16 @@ export function useResetPassword() {
     mutationFn: authApi.resetPassword,
   });
 }
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string;
+      newPassword: string;
+    }) => authApi.changePassword(currentPassword, newPassword),
+  });
+}
+

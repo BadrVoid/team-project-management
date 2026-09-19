@@ -1,8 +1,8 @@
 package com.badr.teamprojectmanagement.space.service;
 
-import com.badr.teamprojectmanagement.common.enums.SpaceJoinRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.SpaceRequestStatus;
 import com.badr.teamprojectmanagement.common.enums.SpaceMemberRole;
-import com.badr.teamprojectmanagement.common.enums.SpaceMembershipStatus;
+import com.badr.teamprojectmanagement.common.enums.SpaceRequestStatus;
 import com.badr.teamprojectmanagement.common.enums.Visibility;
 import com.badr.teamprojectmanagement.exception.BadRequestException;
 import com.badr.teamprojectmanagement.exception.ForbiddenException;
@@ -133,7 +133,7 @@ public class SpaceServiceImpl implements SpaceService {
                 .existsBySpaceIdAndUserIdAndStatus(
                         spaceId,
                         userId,
-                        SpaceJoinRequestStatus.PENDING
+                        SpaceRequestStatus.PENDING
                 )) {
 
             throw new BadRequestException(
@@ -144,14 +144,14 @@ public class SpaceServiceImpl implements SpaceService {
         SpaceJoinRequest request = SpaceJoinRequest.builder()
                 .space(space)
                 .user(user)
-                .status(SpaceJoinRequestStatus.PENDING)
+                .status(SpaceRequestStatus.PENDING)
                 .build();
 
         spaceJoinRequestRepository.save(request);
 
         return mapToPublicSpaceResponse(
                 space,
-                SpaceMembershipStatus.PENDING
+                SpaceRequestStatus.PENDING
         );
     }
 
@@ -169,8 +169,8 @@ public class SpaceServiceImpl implements SpaceService {
                 .findByVisibility(Visibility.PUBLIC)
                 .stream()
                 .map(space -> {
-                    SpaceMembershipStatus status =
-                            getMembershipStatus(
+                    SpaceRequestStatus status =
+                            getRequestStatus(
                                     space.getId(),
                                     user.getId()
                             );
@@ -252,7 +252,7 @@ public class SpaceServiceImpl implements SpaceService {
         );
     }
 
-    private SpaceMembershipStatus getMembershipStatus(
+    private SpaceRequestStatus getRequestStatus(
             UUID spaceId,
             UUID userId
     ) {
@@ -261,30 +261,30 @@ public class SpaceServiceImpl implements SpaceService {
                 userId,
                 SpaceMemberRole.OWNER
         )) {
-            return SpaceMembershipStatus.OWNER;
+            return SpaceRequestStatus.OWNER;
         }
 
         if (spaceMemberRepository.existsBySpaceIdAndUserId(
                 spaceId,
                 userId
         )) {
-            return SpaceMembershipStatus.MEMBER;
+            return SpaceRequestStatus.MEMBER;
         }
 
         if (spaceJoinRequestRepository.existsBySpaceIdAndUserIdAndStatus(
                 spaceId,
                 userId,
-                SpaceJoinRequestStatus.PENDING
+                SpaceRequestStatus.PENDING
         )) {
-            return SpaceMembershipStatus.PENDING;
+            return SpaceRequestStatus.PENDING;
         }
 
-        return SpaceMembershipStatus.NONE;
+        return SpaceRequestStatus.NONE;
     }
 
     private PublicSpaceResponse mapToPublicSpaceResponse(
             Space space,
-            SpaceMembershipStatus membershipStatus
+            SpaceRequestStatus RequestStatus
     ) {
         return new PublicSpaceResponse(
                 space.getId(),
@@ -292,7 +292,7 @@ public class SpaceServiceImpl implements SpaceService {
                 space.getDescription(),
                 space.getVisibility(),
                 space.getOwner().getId(),
-                membershipStatus
+                RequestStatus
         );
     }
 }
