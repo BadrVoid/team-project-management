@@ -33,7 +33,9 @@ public interface ProjectMemberRepository
             User user,
             RequestStatus status
     );
+
     List<ProjectMember> findByProject(Project project);
+
     Optional<ProjectMember> findByProjectIdAndUserId(
             UUID projectId,
             UUID userId

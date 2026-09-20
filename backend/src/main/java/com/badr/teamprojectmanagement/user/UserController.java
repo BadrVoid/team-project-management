@@ -1,3 +1,4 @@
+
 package com.badr.teamprojectmanagement.user;
 
 import com.badr.teamprojectmanagement.common.enums.UserRole;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -80,42 +82,44 @@ public class UserController {
         );
     }
 
+
+    // =========================
+    // User Discovery
+    // =========================
+
     @GetMapping("/discover")
-    public GlobalResponse<Page<UserDiscoveryResponse>> discoverUsers(
-
-            @RequestParam(required = false)
-            String keyword,
-
-            @RequestParam(required = false)
-            String skill,
-
-            @RequestParam(required = false)
-            String tag,
-
-            @RequestParam(defaultValue = "0")
-            int page,
-
-            @RequestParam(defaultValue = "10")
-            int size
+    public ResponseEntity<GlobalResponse<Page<UserDiscoveryResponse>>> discoverUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String skill,
+            @RequestParam(required = false) String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User user
     ) {
 
-        Pageable pageable =
-                PageRequest.of(
-                        page,
-                        size,
-                        Sort.by("firstName").ascending()
-                );
+        Pageable pageable = PageRequest.of(page, size);
 
-        return GlobalResponse.success(
-                "Users discovered successfully",
+        Page<UserDiscoveryResponse> response =
                 userService.discoverUsers(
+                        user.getId(),
                         keyword,
                         skill,
                         tag,
                         pageable
+                );
+
+        return ResponseEntity.ok(
+                GlobalResponse.success(
+                        "Users discovered successfully",
+                        response
                 )
         );
     }
+
+
+    // =========================
+    // Admin - Single User
+    // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
@@ -129,6 +133,7 @@ public class UserController {
         );
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/email")
     public GlobalResponse<UserResponse> getUserByEmail(
@@ -140,6 +145,11 @@ public class UserController {
                 userService.getUserByEmail(email)
         );
     }
+
+
+    // =========================
+    // Admin - Role
+    // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/role")
@@ -155,6 +165,11 @@ public class UserController {
                 null
         );
     }
+
+
+    // =========================
+    // Admin - Ban
+    // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/ban")
@@ -173,6 +188,11 @@ public class UserController {
         );
     }
 
+
+    // =========================
+    // Admin - Delete
+    // =========================
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public GlobalResponse<Void> deleteUser(
@@ -186,6 +206,7 @@ public class UserController {
                 null
         );
     }
+
 
     // =========================
     // Current User
@@ -202,6 +223,7 @@ public class UserController {
         );
     }
 
+
     @PutMapping("/me")
     public GlobalResponse<UserResponse> updateCurrentUser(
             @AuthenticationPrincipal User user,
@@ -217,6 +239,7 @@ public class UserController {
         );
     }
 
+
     @DeleteMapping("/me")
     public GlobalResponse<Void> deleteCurrentUser(
             @AuthenticationPrincipal User user
@@ -230,3 +253,4 @@ public class UserController {
         );
     }
 }
+

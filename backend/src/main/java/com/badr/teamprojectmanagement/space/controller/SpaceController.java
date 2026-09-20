@@ -1,10 +1,7 @@
 package com.badr.teamprojectmanagement.space.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
-import com.badr.teamprojectmanagement.space.dtos.PublicSpaceResponse;
-import com.badr.teamprojectmanagement.space.dtos.SpaceCreateRequest;
-import com.badr.teamprojectmanagement.space.dtos.SpaceResponse;
-import com.badr.teamprojectmanagement.space.dtos.SpaceUpdateRequest;
+import com.badr.teamprojectmanagement.space.dtos.*;
 import com.badr.teamprojectmanagement.space.service.SpaceService;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
@@ -140,4 +137,59 @@ public class SpaceController {
                 null
         );
     }
+
+    @GetMapping("/{id}/join-requests")
+    public GlobalResponse<List<SpaceJoinRequestResponse>> getPendingJoinRequests(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
+    ) {
+        List<SpaceJoinRequestResponse> response =
+                spaceService.getPendingJoinRequests(
+                        id,
+                        user.getId()
+                );
+
+        return GlobalResponse.success(
+                "Pending join requests retrieved successfully",
+                response
+        );
+    }
+
+    @PostMapping("/{spaceId}/join-requests/{requestId}/accept")
+    public GlobalResponse<Void> acceptJoinRequest(
+            @PathVariable UUID spaceId,
+            @PathVariable UUID requestId,
+            @AuthenticationPrincipal User user
+    ) {
+        spaceService.acceptJoinRequest(
+                spaceId,
+                requestId,
+                user.getId()
+        );
+
+        return GlobalResponse.success(
+                "Join request accepted successfully",
+                null
+        );
+    }
+
+    @PostMapping("/{spaceId}/join-requests/{requestId}/reject")
+    public GlobalResponse<Void> rejectJoinRequest(
+            @PathVariable UUID spaceId,
+            @PathVariable UUID requestId,
+            @AuthenticationPrincipal User user
+    ) {
+        spaceService.rejectJoinRequest(
+                spaceId,
+                requestId,
+                user.getId()
+        );
+
+        return GlobalResponse.success(
+                "Join request rejected successfully",
+                null
+        );
+    }
+
+
 }

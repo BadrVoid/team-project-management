@@ -10,6 +10,7 @@ public interface TeamMemberService {
 
     TeamMemberResponse addMember(
             UUID teamId,
+            UUID currentUserId,
             TeamMemberRequest request
     );
 
@@ -17,9 +18,14 @@ public interface TeamMemberService {
 
     TeamMemberResponse updateMemberRole(
             UUID teamId,
+            UUID currentUserId,
             UUID userId,
             TeamMemberRequest request
     );
 
-    void removeMember(UUID teamId, UUID userId);
+    void removeMember(
+            UUID teamId,
+            UUID currentUserId,
+            UUID userId
+    );
 }

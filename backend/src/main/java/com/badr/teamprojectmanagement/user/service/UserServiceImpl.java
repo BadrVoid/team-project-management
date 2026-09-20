@@ -52,21 +52,31 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserDiscoveryResponse> discoverUsers(
+            UUID currentUserId,
             String keyword,
             String skill,
             String tag,
             Pageable pageable
     ) {
+
         Specification<User> specification =
-                Specification.where(
-                                UserSpecification.discoveryKeyword(keyword)
-                        )
+                Specification
+                        .where(UserSpecification.notUser(currentUserId))
+                        .and(UserSpecification.notAdmin())
+                        .and(UserSpecification.isVerified(true))
+                        .and(UserSpecification.isBanned(false))
+                        .and(UserSpecification.discoveryKeyword(keyword))
                         .and(UserSpecification.skill(skill))
                         .and(UserSpecification.tag(tag));
 
-        return userRepository.findAll(specification, pageable)
-                .map(userMapper::toDiscoveryResponse);
+        Page<User> users = userRepository.findAll(
+                specification,
+                pageable
+        );
+
+        return users.map(userMapper::toDiscoveryResponse);
     }
+
 
     @Override
     public void updateUserBanStatus(UUID userId, boolean banned) {

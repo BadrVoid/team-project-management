@@ -1,13 +1,16 @@
-package com.badr.teamprojectmanagement.team.controller;
+
+package com.badr.teamprojectmanagement.team;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import com.badr.teamprojectmanagement.team.dtos.TeamMemberRequest;
 import com.badr.teamprojectmanagement.team.dtos.TeamMemberResponse;
 import com.badr.teamprojectmanagement.team.service.TeamMemberService;
+import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,17 +26,18 @@ public class TeamMemberController {
     @PostMapping
     public ResponseEntity<GlobalResponse<TeamMemberResponse>> addMember(
             @PathVariable UUID teamId,
-            @Valid @RequestBody TeamMemberRequest request
+            @Valid @RequestBody TeamMemberRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
 
         TeamMemberResponse response =
                 teamMemberService.addMember(
                         teamId,
+                        currentUser.getId(),
                         request
                 );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         GlobalResponse.success(
                                 "Team member added successfully",
@@ -62,12 +66,14 @@ public class TeamMemberController {
     public ResponseEntity<GlobalResponse<TeamMemberResponse>> updateMemberRole(
             @PathVariable UUID teamId,
             @PathVariable UUID userId,
-            @Valid @RequestBody TeamMemberRequest request
+            @Valid @RequestBody TeamMemberRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
 
         TeamMemberResponse response =
                 teamMemberService.updateMemberRole(
                         teamId,
+                        currentUser.getId(),
                         userId,
                         request
                 );
@@ -83,11 +89,13 @@ public class TeamMemberController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<GlobalResponse<Void>> removeMember(
             @PathVariable UUID teamId,
-            @PathVariable UUID userId
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal User currentUser
     ) {
 
         teamMemberService.removeMember(
                 teamId,
+                currentUser.getId(),
                 userId
         );
 

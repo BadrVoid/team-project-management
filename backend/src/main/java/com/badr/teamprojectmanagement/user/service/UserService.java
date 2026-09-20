@@ -34,12 +34,8 @@ public interface UserService {
 
     void updateUserBanStatus(UUID userId, boolean banned);
 
-    Page<UserDiscoveryResponse> discoverUsers(
-            String keyword,
-            String skill,
-            String tag,
-            Pageable pageable
-    );
+    Page<UserDiscoveryResponse> discoverUsers(UUID currentUserId, String keyword, String skill, String tag, Pageable pageable);
+
     // User
     UserResponse updateUser(UUID id, UserUpdateRequest request);
 }

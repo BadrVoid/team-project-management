@@ -2,6 +2,7 @@ package com.badr.teamprojectmanagement.task.service;
 
 import com.badr.teamprojectmanagement.common.enums.NotificationType;
 import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
+import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.notification.service.NotificationService;
 import com.badr.teamprojectmanagement.task.Task;
@@ -16,7 +17,6 @@ import com.badr.teamprojectmanagement.team.TeamMemberRepository;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +34,13 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     private final TeamMemberRepository teamMemberRepository;
     private final TaskMapper taskMapper;
     private final NotificationService notificationService;
+
     @Override
     public TaskCommentResponse createComment(
             UUID taskId,
             UUID userId,
-            TaskCommentCreateRequest request) {
+            TaskCommentCreateRequest request
+    ) {
 
         Task task = findTask(taskId);
         User user = findUser(userId);
@@ -51,28 +53,47 @@ public class TaskCommentServiceImpl implements TaskCommentService {
                 .content(request.content())
                 .build();
 
-        TaskComment savedComment = taskCommentRepository.save(comment);
+        TaskComment savedComment =
+                taskCommentRepository.save(comment);
 
-        // Notify task creator
+        /*
+         * Notify task creator.
+         *
+         * Do not notify the creator if they
+         * are the person who commented.
+         */
         if (!task.getCreatedBy().getId().equals(userId)) {
+
             notificationService.createNotification(
                     task.getCreatedBy().getId(),
                     NotificationType.TASK_COMMENTED,
-                    user.getFirstName() + " " + user.getLastName()
-                            + " commented on your task: " + task.getTitle()
+                    user.getFirstName() + " "
+                            + user.getLastName()
+                            + " commented on your task: "
+                            + task.getTitle()
             );
         }
 
-        // Notify assigned user
+        /*
+         * Notify assigned user.
+         *
+         * Avoid duplicate notification when the
+         * assigned user is also the task creator.
+         *
+         * Also don't notify the person who commented.
+         */
         if (task.getAssignedTo() != null
                 && !task.getAssignedTo().getId().equals(userId)
-                && !task.getAssignedTo().getId().equals(task.getCreatedBy().getId())) {
+                && !task.getAssignedTo().getId()
+                .equals(task.getCreatedBy().getId())) {
 
             notificationService.createNotification(
                     task.getAssignedTo().getId(),
                     NotificationType.TASK_COMMENTED,
-                    user.getFirstName() + " " + user.getLastName()
-                            + " commented on your assigned task: " + task.getTitle()
+                    user.getFirstName() + " "
+                            + user.getLastName()
+                            + " commented on your assigned task: "
+                            + task.getTitle()
             );
         }
 
@@ -131,7 +152,8 @@ public class TaskCommentServiceImpl implements TaskCommentService {
                 );
 
         if (!isOwner && !isTeamLeader) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You are not allowed to delete this comment"
             );
         }
@@ -140,6 +162,7 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     }
 
     private Task findTask(UUID taskId) {
+
         return taskRepository.findById(taskId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -148,6 +171,7 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     }
 
     private TaskComment findComment(UUID commentId) {
+
         return taskCommentRepository.findById(commentId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -156,6 +180,7 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     }
 
     private User findUser(UUID userId) {
+
         return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -175,7 +200,8 @@ public class TaskCommentServiceImpl implements TaskCommentService {
                 );
 
         if (!isMember) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You must be a team member to access this task's comments"
             );
         }
@@ -187,7 +213,8 @@ public class TaskCommentServiceImpl implements TaskCommentService {
     ) {
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You can only edit your own comments"
             );
         }

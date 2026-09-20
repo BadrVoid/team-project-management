@@ -2,6 +2,7 @@ package com.badr.teamprojectmanagement.task.service;
 
 import com.badr.teamprojectmanagement.common.enums.NotificationType;
 import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
+import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.notification.service.NotificationService;
 import com.badr.teamprojectmanagement.task.Task;
@@ -17,7 +18,6 @@ import com.badr.teamprojectmanagement.team.TeamRepository;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,18 +50,24 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
-        // Creator must be a team member
+        /*
+         * Creator must be a team member.
+         */
         if (!teamMemberRepository.existsByTeamIdAndUserId(
                 team.getId(),
                 userId
         )) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You must be a team member to create a task"
             );
         }
 
         User assignedTo = null;
 
+        /*
+         * Validate assigned user.
+         */
         if (request.assignedToId() != null) {
 
             assignedTo = userRepository.findById(
@@ -71,12 +77,16 @@ public class TaskServiceImpl implements TaskService {
                             "Assigned user not found"
                     ));
 
-            // Assigned user must be a member of the same team
+            /*
+             * Assigned user must be a member
+             * of the same team.
+             */
             if (!teamMemberRepository.existsByTeamIdAndUserId(
                     team.getId(),
                     request.assignedToId()
             )) {
-                throw new AccessDeniedException(
+
+                throw new ForbiddenException(
                         "Assigned user must be a member of the team"
                 );
             }
@@ -94,8 +104,11 @@ public class TaskServiceImpl implements TaskService {
 
         Task savedTask = taskRepository.save(task);
 
-        // Notify assigned user
+        /*
+         * Notify assigned user.
+         */
         if (assignedTo != null) {
+
             notificationService.createNotification(
                     assignedTo.getId(),
                     NotificationType.TASK_ASSIGNED,
@@ -110,14 +123,18 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponse getTaskById(UUID id) {
+
         Task task = findTask(id);
+
         return taskMapper.toResponse(task);
     }
 
     @Override
     @Transactional(readOnly = true)
     public TaskDetailsResponse getTaskDetails(UUID id) {
+
         Task task = findTask(id);
+
         return taskMapper.toDetailsResponse(task);
     }
 
@@ -160,8 +177,16 @@ public class TaskServiceImpl implements TaskService {
 
         authorizeTaskUpdate(task, userId);
 
+        /*
+         * Keep the old assignee before changing it.
+         */
+        User oldAssignedTo = task.getAssignedTo();
+
         User assignedTo = null;
 
+        /*
+         * Validate the new assigned user.
+         */
         if (request.assignedToId() != null) {
 
             assignedTo = userRepository.findById(
@@ -171,30 +196,48 @@ public class TaskServiceImpl implements TaskService {
                             "Assigned user not found"
                     ));
 
-            // Assigned user must belong to the same team
+            /*
+             * New assignee must belong
+             * to the same team.
+             */
             if (!teamMemberRepository.existsByTeamIdAndUserId(
                     task.getTeam().getId(),
                     request.assignedToId()
             )) {
-                throw new AccessDeniedException(
+
+                throw new ForbiddenException(
                         "Assigned user must be a member of the team"
                 );
             }
         }
-        User oldAssignedTo = task.getAssignedTo();
+
+        /*
+         * Update task fields.
+         */
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setStatus(request.status());
         task.setPriority(request.priority());
         task.setDueDate(request.dueDate());
         task.setAssignedTo(assignedTo);
-        if (assignedTo != null) {
 
-            boolean assigneeChanged =
-                    oldAssignedTo == null
-                            || !oldAssignedTo.getId().equals(assignedTo.getId());
+        /*
+         * Assignment changed.
+         */
+        boolean assignmentChanged =
+                oldAssignedTo == null
+                        ? assignedTo != null
+                        : assignedTo == null
+                        || !oldAssignedTo.getId()
+                        .equals(assignedTo.getId());
 
-            if (assigneeChanged) {
+        if (assignmentChanged) {
+
+            /*
+             * Notify the new assignee.
+             */
+            if (assignedTo != null
+                    && !assignedTo.getId().equals(userId)) {
 
                 notificationService.createNotification(
                         assignedTo.getId(),
@@ -202,22 +245,49 @@ public class TaskServiceImpl implements TaskService {
                         "You have been assigned a task: "
                                 + task.getTitle()
                 );
+            }
 
-            } else if (!assignedTo.getId().equals(userId)) {
+            /*
+             * Notify the previous assignee that
+             * their assignment was removed/changed.
+             */
+            if (oldAssignedTo != null
+                    && !oldAssignedTo.getId().equals(userId)
+                    && (assignedTo == null
+                    || !oldAssignedTo.getId()
+                    .equals(assignedTo.getId()))) {
 
                 notificationService.createNotification(
-                        assignedTo.getId(),
+                        oldAssignedTo.getId(),
                         NotificationType.TASK_UPDATED,
-                        "Your assigned task was updated: "
+                        "Your assignment on the task was changed: "
                                 + task.getTitle()
                 );
             }
+
+        } else if (assignedTo != null
+                && !assignedTo.getId().equals(userId)) {
+
+            /*
+             * Task was updated but the assignee
+             * did not change.
+             */
+            notificationService.createNotification(
+                    assignedTo.getId(),
+                    NotificationType.TASK_UPDATED,
+                    "Your assigned task was updated: "
+                            + task.getTitle()
+            );
         }
+
         return taskMapper.toResponse(task);
     }
 
     @Override
-    public void deleteTask(UUID id, UUID userId) {
+    public void deleteTask(
+            UUID id,
+            UUID userId
+    ) {
 
         Task task = findTask(id);
 
@@ -230,7 +300,9 @@ public class TaskServiceImpl implements TaskService {
 
         return taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Task not found"));
+                        new ResourceNotFoundException(
+                                "Task not found"
+                        ));
     }
 
     private void authorizeTaskUpdate(
@@ -256,7 +328,8 @@ public class TaskServiceImpl implements TaskService {
                 );
 
         if (!isCreator && !isAssignedUser && !isTeamLeader) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You are not allowed to update this task"
             );
         }
@@ -279,7 +352,8 @@ public class TaskServiceImpl implements TaskService {
                 );
 
         if (!isCreator && !isTeamLeader) {
-            throw new AccessDeniedException(
+
+            throw new ForbiddenException(
                     "You are not allowed to manage this task"
             );
         }

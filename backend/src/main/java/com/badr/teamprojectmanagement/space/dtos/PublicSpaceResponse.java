@@ -1,6 +1,6 @@
 package com.badr.teamprojectmanagement.space.dtos;
 
-import com.badr.teamprojectmanagement.common.enums.SpaceRequestStatus;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.Visibility;
 
 import java.util.UUID;
@@ -11,6 +11,6 @@ public record PublicSpaceResponse(
         String description,
         Visibility visibility,
         UUID ownerId,
-        SpaceRequestStatus RequestStatus
+        RequestStatus RequestStatus
 ) {
 }

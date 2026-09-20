@@ -1,6 +1,7 @@
 package com.badr.teamprojectmanagement.notification.service;
 
 import com.badr.teamprojectmanagement.common.enums.NotificationType;
+import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
 import com.badr.teamprojectmanagement.notification.Notification;
 import com.badr.teamprojectmanagement.notification.NotificationMapper;
@@ -9,7 +10,6 @@ import com.badr.teamprojectmanagement.notification.dtos.NotificationResponse;
 import com.badr.teamprojectmanagement.user.User;
 import com.badr.teamprojectmanagement.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -143,9 +143,8 @@ public class NotificationServiceImpl
             Notification notification,
             UUID userId
     ) {
-
         if (!notification.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException(
+            throw new ForbiddenException(
                     "You are not allowed to access this notification"
             );
         }

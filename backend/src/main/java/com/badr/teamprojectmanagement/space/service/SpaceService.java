@@ -1,7 +1,9 @@
+
 package com.badr.teamprojectmanagement.space.service;
 
 import com.badr.teamprojectmanagement.space.dtos.PublicSpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceCreateRequest;
+import com.badr.teamprojectmanagement.space.dtos.SpaceJoinRequestResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceResponse;
 import com.badr.teamprojectmanagement.space.dtos.SpaceUpdateRequest;
 
@@ -33,14 +35,32 @@ public interface SpaceService {
             UUID userId
     );
 
+    List<SpaceJoinRequestResponse> getPendingJoinRequests(
+            UUID spaceId,
+            UUID currentUserId
+    );
+
+    void acceptJoinRequest(
+            UUID spaceId,
+            UUID requestId,
+            UUID currentUserId
+    );
+
+    void rejectJoinRequest(
+            UUID spaceId,
+            UUID requestId,
+            UUID currentUserId
+    );
+
     SpaceResponse updateSpace(
             UUID id,
-            UUID ownerId,
+            UUID currentUserId,
             SpaceUpdateRequest request
     );
 
     void deleteSpace(
             UUID id,
-            UUID ownerId
+            UUID currentUserId
     );
 }
+

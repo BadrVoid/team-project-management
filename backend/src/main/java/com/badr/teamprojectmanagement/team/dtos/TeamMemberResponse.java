@@ -8,5 +8,8 @@ public record TeamMemberResponse(
         UUID id,
         UUID teamId,
         UUID userId,
+        String firstName,
+        String lastName,
+        String email,
         TeamMemberRole role
 ) {}
