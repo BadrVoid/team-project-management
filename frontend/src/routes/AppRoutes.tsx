@@ -15,11 +15,12 @@ import WorkspacePage from "@/pages/workspace/WorkspacePage";
 import ProjectDetailsPage from "@/pages/projects/ProjectDetailsPage";
 
 import NotificationsPage from "@/pages/notifications/NotificationsPage";
-
+import TaskDetailsPage from "@/pages/tasks/TaskDetailsPage";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import TeamDetailsPage from "@/pages/teams/TeamDetailsPage";
 import ProfilePage from "@/pages/profile/ProfilePage";
+import PublicRoute from "./PublicRoute";
 export function AppRoutes() {
   return (
     <Routes>
@@ -27,10 +28,11 @@ export function AppRoutes() {
           Public Routes
       ========================= */}
 
-      <Route path="/auth" element={<AuthPage />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/auth" element={<AuthPage />} />
+      </Route>
 
       <Route path="/oauth/callback" element={<OAuthCallback />} />
-
       {/* =========================
           Protected Routes
       ========================= */}
@@ -73,7 +75,7 @@ export function AppRoutes() {
           ========================= */}
 
           <Route path="/settings" element={<SettingsPage />} />
-
+          <Route path="/tasks/:id" element={<TaskDetailsPage />} />
           {/* =========================
               Profile
           ========================= */}

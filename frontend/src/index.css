@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* =========================================================
-   FONT DEFINITIONS (@font-face)
+   FONT DEFINITIONS
    ========================================================= */
 
 @font-face {
@@ -36,78 +36,203 @@
   font-display: swap;
 }
 
-/* Base */
+/* =========================================================
+   BASE THEME
+   ========================================================= */
 
 :root {
-  /* Font — Updated to use Oswald with fallback */
+  /* Font */
   --font-sans:
     "Oswald", -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* THEME 1 — CORAL / NAVY */
+  /* =======================================================
+     LIGHT THEME
+     ======================================================= */
+
   --background: #f4f7f2;
   --foreground: #17231b;
 
   --card: #ffffff;
   --card-foreground: #17231b;
 
-  --primary: #3f7d5a;
-  --primary-foreground: #ffffff;
+  /* Accent / Primary */
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--accent-primary-foreground);
 
-  --secondary: #dce9df;
-  --secondary-foreground: #294735;
+  /* Secondary */
+  --secondary: var(--accent-secondary);
+  --secondary-foreground: var(--accent-secondary-foreground);
 
+  /* Muted */
   --muted: #e8eee9;
   --muted-foreground: #68776d;
 
-  --accent: #c7dfcf;
-  --accent-foreground: #23432f;
+  /* Accent */
+  --accent: var(--accent-soft);
+  --accent-foreground: var(--accent-soft-foreground);
 
+  /* Borders / Inputs */
   --border: #d5dfd7;
   --input: #d5dfd7;
 
-  --ring: #3f7d5a;
+  /* Focus */
+  --ring: var(--accent-primary);
 
+  /* Destructive */
   --destructive: #dc4c4c;
   --destructive-foreground: #ffffff;
+
+  /* =======================================================
+     DEFAULT ACCENT — GREEN
+     ======================================================= */
+
+  --accent-primary: #3f7d5a;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #dce9df;
+  --accent-secondary-foreground: #294735;
+
+  --accent-soft: #c7dfcf;
+  --accent-soft-foreground: #23432f;
 }
 
-/* 2. Target both .dark class and [data-theme="dark"] for next-themes compatibility */
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
 .dark {
-  /* Surface Layers (Deep Teal Tinted Blacks for rich depth) */
   --background: #090c0c;
   --foreground: #f0f4f3;
 
   --card: #111716;
   --card-foreground: #f0f4f3;
 
-  /* Primary Brand (Vibrant Teal for strong UI presence) */
-  --primary: #38a390;
-  --primary-foreground: #081714;
+  /* Primary */
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--accent-primary-foreground);
 
-  /* Secondary Elements & Badges */
-  --secondary: #1a2a27;
-  --secondary-foreground: #a3c7c0;
+  /* Secondary */
+  --secondary: var(--accent-secondary);
+  --secondary-foreground: var(--accent-secondary-foreground);
 
-  /* Muted States & Secondary Text */
+  /* Muted */
   --muted: #15201d;
   --muted-foreground: #829590;
 
-  /* Accent (Soft Mint Glow that complements the Primary) */
-  --accent: #263834;
-  --accent-foreground: #70d6c3;
+  /* Accent */
+  --accent: var(--accent-soft);
+  --accent-foreground: var(--accent-soft-foreground);
 
-  /* Form Elements & Structural Lines */
+  /* Borders / Inputs */
   --border: #1e302c;
   --input: #1e302c;
-  --ring: #38a390;
 
-  /* Destructive States (Slightly desaturated Red for reduced eye strain) */
+  /* Focus */
+  --ring: var(--accent-primary);
+
+  /* Destructive */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 }
 
-/* TAILWIND THEME TOKENS */
+/* =========================================================
+   ACCENT COLORS
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   GREEN — Default
+   --------------------------------------------------------- */
+
+[data-accent="green"] {
+  --accent-primary: #3f7d5a;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #dce9df;
+  --accent-secondary-foreground: #294735;
+
+  --accent-soft: #c7dfcf;
+  --accent-soft-foreground: #23432f;
+}
+
+/* ---------------------------------------------------------
+   BLUE
+   --------------------------------------------------------- */
+
+[data-accent="blue"] {
+  --accent-primary: #3b82f6;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #dbeafe;
+  --accent-secondary-foreground: #1e3a8a;
+
+  --accent-soft: #bfdbfe;
+  --accent-soft-foreground: #1e40af;
+}
+
+/* ---------------------------------------------------------
+   PURPLE
+   --------------------------------------------------------- */
+
+[data-accent="purple"] {
+  --accent-primary: #8b5cf6;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #ede9fe;
+  --accent-secondary-foreground: #5b21b6;
+
+  --accent-soft: #ddd6fe;
+  --accent-soft-foreground: #6d28d9;
+}
+
+/* ---------------------------------------------------------
+   ORANGE
+   --------------------------------------------------------- */
+
+[data-accent="orange"] {
+  --accent-primary: #f97316;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #ffedd5;
+  --accent-secondary-foreground: #9a3412;
+
+  --accent-soft: #fed7aa;
+  --accent-soft-foreground: #c2410c;
+}
+
+/* ---------------------------------------------------------
+   ROSE
+   --------------------------------------------------------- */
+
+[data-accent="rose"] {
+  --accent-primary: #e11d48;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #ffe4e6;
+  --accent-secondary-foreground: #9f1239;
+
+  --accent-soft: #fecdd3;
+  --accent-soft-foreground: #be123c;
+}
+
+/* ---------------------------------------------------------
+   CYAN
+   --------------------------------------------------------- */
+
+[data-accent="cyan"] {
+  --accent-primary: #0891b2;
+  --accent-primary-foreground: #ffffff;
+
+  --accent-secondary: #cffafe;
+  --accent-secondary-foreground: #155e75;
+
+  --accent-soft: #a5f3fc;
+  --accent-soft-foreground: #0e7490;
+}
+
+/* =========================================================
+   TAILWIND THEME TOKENS
+   ========================================================= */
 
 @theme {
   --font-sans: var(--font-sans);
@@ -132,13 +257,16 @@
 
   --color-border: var(--border);
   --color-input: var(--input);
+
   --color-ring: var(--ring);
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 }
 
-/* GLOBAL STYLES */
+/* =========================================================
+   GLOBAL STYLES
+   ========================================================= */
 
 html {
   font-family: var(--font-sans);
@@ -156,10 +284,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Apply border color globally */
 * {
   border-color: var(--border);
 }
 
+/* Make form elements inherit Oswald */
 button,
 input,
 textarea,
@@ -167,11 +297,16 @@ select {
   font: inherit;
 }
 
+/* =========================================================
+   CARD ENTER ANIMATION
+   ========================================================= */
+
 @keyframes cardEnter {
   0% {
     opacity: 0;
     transform: translateY(32px) scale(0.97);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);

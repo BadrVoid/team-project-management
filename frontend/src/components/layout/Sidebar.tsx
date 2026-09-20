@@ -8,12 +8,12 @@ import {
   Compass,
   FolderKanban,
   LayoutDashboard,
-  Settings,
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 
 const NAVIGATION = [
   {
@@ -42,9 +42,12 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSpacesOpen, setIsSpacesOpen] = useState(false);
 
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
+
   const isSpacesActive = location.pathname.startsWith("/spaces");
 
   useEffect(() => {
+    // Keep Spaces submenu open whenever the user is inside a Spaces route.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSpacesOpen(isSpacesActive);
   }, [location.pathname, isSpacesActive]);
@@ -247,7 +250,7 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Projects + Notifications */}
+        {/* Workspace */}
         {NAVIGATION.map((item) => {
           const Icon = item.icon;
 
@@ -278,6 +281,43 @@ export default function Sidebar() {
             </NavLink>
           );
         })}
+
+        {/* Notifications */}
+        <NavLink
+          to="/notifications"
+          title={isCollapsed ? "Notifications" : undefined}
+          className={({ isActive }) =>
+            `relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-200 ${
+              isCollapsed ? "justify-center" : "gap-3 px-3"
+            } ${
+              isActive
+                ? "border border-primary/20 bg-primary/10 text-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            }`
+          }
+        >
+          <Bell className="size-[18px] shrink-0" />
+
+          <span
+            className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+              isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            }`}
+          >
+            Notifications
+          </span>
+
+          {unreadCount > 0 && (
+            <span
+              className={`flex items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-4 text-destructive-foreground ${
+                isCollapsed
+                  ? "absolute right-1 top-1 min-w-4"
+                  : "ml-auto min-w-5"
+              }`}
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </NavLink>
       </nav>
     </aside>
   );

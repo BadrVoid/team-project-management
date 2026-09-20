@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useDiscoverUsers } from "@/hooks/users.hooks";
+import { useDiscoverUsers } from "@/hooks/useUsers";
 import { useInviteMember } from "@/hooks/project-members.hooks";
 import type { ProjectMemberRole, UserDiscoveryResponse } from "@/api/types";
 

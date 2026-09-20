@@ -7,7 +7,13 @@ export default function ProtectedRoute() {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace state={{ from: location }} />;
+    return (
+      <Navigate
+        to="/auth"
+        replace
+        state={{ from: location }}
+      />
+    );
   }
 
   return <Outlet />;

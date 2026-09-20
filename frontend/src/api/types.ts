@@ -1,8 +1,4 @@
-// src/api/types.ts
-
-// =========================
 // Global Response
-// =========================
 
 export interface GlobalResponse<T> {
   success: boolean;
@@ -10,9 +6,8 @@ export interface GlobalResponse<T> {
   data: T;
   timestamp: string;
 }
-// =========================
+
 // Auth
-// =========================
 
 export interface LoginRequest {
   email: string;
@@ -51,9 +46,7 @@ export interface RefreshResponse {
   refreshToken: string;
 }
 
-// =========================
 // User
-// =========================
 
 export type UserRole = "USER" | "ADMIN";
 
@@ -63,7 +56,6 @@ export interface UserSummaryResponse {
   lastName: string;
   email: string;
 }
-
 
 export interface UserResponse {
   id: string;
@@ -86,11 +78,10 @@ export interface UserDiscoveryResponse {
   tags: string[];
 }
 
-
-// =========================
 // Space
-// =========================
+
 export type SpaceVisibility = "PRIVATE" | "PUBLIC";
+
 export interface SpaceResponse {
   id: string;
   name: string;
@@ -98,11 +89,13 @@ export interface SpaceResponse {
   ownerId: string;
   visibility: SpaceVisibility;
 }
+
 export type SpaceMembershipStatus =
   | "NONE"
   | "PENDING"
   | "MEMBER"
   | "OWNER";
+
 export interface PublicSpaceResponse {
   id: string;
   name: string;
@@ -111,9 +104,9 @@ export interface PublicSpaceResponse {
   ownerId: string;
   membershipStatus: SpaceMembershipStatus;
 }
-// =========================
+
 // Project
-// =========================
+
 export type ProjectStatus =
   | "PLANNING"
   | "ACTIVE"
@@ -131,13 +124,28 @@ export interface ProjectResponse {
   createdBy: string;
 }
 
+export type ProjectMemberRole =
+  | "OWNER"
+  | "MANAGER"
+  | "MEMBER";
+
+export type MembershipStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "REJECTED";
+
+export interface ProjectMemberRequest {
+  userId: string;
+  role: ProjectMemberRole;
+}
+
 export interface ProjectMemberResponse {
   id: string;
   userId: string;
   firstName: string;
   lastName: string;
-  role: "OWNER" | "MANAGER" | "MEMBER";
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  role: ProjectMemberRole;
+  status: MembershipStatus;
 }
 
 export interface UpdateProjectRequest {
@@ -166,10 +174,7 @@ export interface ProjectDetailsResponse {
   teams: TeamSummaryResponse[];
 }
 
-
-// =========================
 // Team
-// =========================
 
 export interface TeamResponse {
   id: string;
@@ -189,20 +194,26 @@ export interface TeamUpdateRequest {
   description?: string;
 }
 
-export type TeamMemberRole = "LEADER" | "MEMBER";
+export type TeamMemberRole =
+  | "LEADER"
+  | "MEMBER";
+
+export interface TeamMemberRequest {
+  userId: string;
+  role: TeamMemberRole;
+}
 
 export interface TeamMemberResponse {
   id: string;
   teamId: string;
   userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   role: TeamMemberRole;
 }
 
-
-
-// =========================
 // Task
-// =========================
 
 export type TaskStatus =
   | "TODO"
@@ -240,9 +251,7 @@ export interface TaskDetailsResponse {
   createdBy: UserSummaryResponse;
 }
 
-// =========================
 // Notification
-// =========================
 
 export type NotificationType =
   | "TASK_ASSIGNED"
@@ -250,6 +259,9 @@ export type NotificationType =
   | "TASK_COMMENTED"
   | "PROJECT_INVITATION"
   | "TEAM_INVITATION"
+  | "SPACE_JOIN_REQUEST"
+  | "SPACE_JOIN_REQUEST_ACCEPTED"
+  | "SPACE_JOIN_REQUEST_REJECTED"
   | "SYSTEM";
 
 export interface NotificationResponse {
@@ -260,10 +272,11 @@ export interface NotificationResponse {
   createdAt: string;
 }
 
-// =========================
 // Profile
-// =========================
-export type AuthProvider = "GOOGLE" | "GITHUB";
+
+export type AuthProvider =
+  | "GOOGLE"
+  | "GITHUB";
 
 export interface UserProfileRequest {
   bio?: string;
@@ -288,7 +301,3 @@ export interface UserProfileResponse {
   skills: string[];
   tags: string[];
 }
-
-
-
-export type ProjectMemberRole = "OWNER" | "MANAGER" | "MEMBER"; export interface ProjectMemberRequest { userId: string; role: ProjectMemberRole; } export interface ProjectMemberResponse { id: string; userId: string; firstName: string; lastName: string; role: ProjectMemberRole; status: "PENDING" | "ACCEPTED" | "REJECTED"; }

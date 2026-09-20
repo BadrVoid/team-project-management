@@ -3,7 +3,6 @@ import {
   Eye,
   EyeOff,
   Lock,
-  LogOut,
   Shield,
   User,
   CheckCircle2,
@@ -23,12 +22,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { useAuth } from "@/context/AuthContext";
 import { useChangePassword } from "@/hooks/useAuth";
 import { useMyProfile } from "@/hooks/useProfile";
 
 export default function SettingsPage() {
-  const { logout } = useAuth();
   const { data: profile, isLoading: isProfileLoading } = useMyProfile();
   const changePasswordMutation = useChangePassword();
 
@@ -87,10 +84,11 @@ export default function SettingsPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
           setPasswordError(
-            error?.response?.data?.message || "Failed to change password. Please check your credentials."
+            error?.response?.data?.message ||
+              "Failed to change password. Please check your credentials.",
           );
         },
-      }
+      },
     );
   };
 
@@ -144,8 +142,8 @@ export default function SettingsPage() {
     profile.authProvider === "GOOGLE"
       ? "Google"
       : profile.authProvider === "GITHUB"
-      ? "GitHub"
-      : profile.authProvider;
+        ? "GitHub"
+        : profile.authProvider;
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -174,18 +172,30 @@ export default function SettingsPage() {
         <CardContent className="space-y-5 pt-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">First Name</Label>
-              <Input value={profile.firstName} disabled className="bg-muted/40" />
+              <Label className="text-xs text-muted-foreground">
+                First Name
+              </Label>
+              <Input
+                value={profile.firstName}
+                disabled
+                className="bg-muted/40"
+              />
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Last Name</Label>
-              <Input value={profile.lastName} disabled className="bg-muted/40" />
+              <Input
+                value={profile.lastName}
+                disabled
+                className="bg-muted/40"
+              />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Email Address</Label>
+            <Label className="text-xs text-muted-foreground">
+              Email Address
+            </Label>
             <Input value={profile.email} disabled className="bg-muted/40" />
           </div>
 
@@ -306,7 +316,9 @@ export default function SettingsPage() {
 
                   {/* Confirm Password */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword">
+                      Confirm New Password
+                    </Label>
                     <div className="relative">
                       <Input
                         id="confirmPassword"
@@ -376,28 +388,12 @@ export default function SettingsPage() {
                   <span className="font-semibold text-foreground">
                     {providerName}
                   </span>
-                  . Passwords and security credentials are managed directly through your third-party provider.
+                  . Passwords and security credentials are managed directly
+                  through your third-party provider.
                 </p>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Account Actions / Logout */}
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium">Sign Out</p>
-            <p className="text-xs text-muted-foreground">
-              Sign out of your active session on this device.
-            </p>
-          </div>
-
-          <Button variant="destructive" onClick={logout} size="sm">
-            <LogOut className="mr-2 size-4" />
-            Logout
-          </Button>
         </CardContent>
       </Card>
     </div>

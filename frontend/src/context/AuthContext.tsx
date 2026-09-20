@@ -5,7 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
-
+import { authApi } from "@/api/apis/auth.api";
 type AuthContextType = {
   accessToken: string | null;
   refreshToken: string | null;
@@ -56,15 +56,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
 
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 
-    setAccessToken(null);
-    setRefreshToken(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+    }
   }, []);
 
   const value = useMemo(

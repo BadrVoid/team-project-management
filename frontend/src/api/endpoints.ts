@@ -41,11 +41,29 @@ export const endpoints = {
 
 
 
+
   teams: {
     create: "/teams",
-    byProject: (projectId: string) => `/teams/project/${projectId}`,
-    byId: (id: string) => `/teams/${id}`,
+
+    byProject: (projectId: string) =>
+      `/teams/project/${projectId}`,
+
+    byId: (id: string) =>
+      `/teams/${id}`,
+
+    members: (teamId: string) =>
+      `/teams/${teamId}/members`,
+
+    addMember: (teamId: string) =>
+      `/teams/${teamId}/members`,
+
+    updateMemberRole: (teamId: string, userId: string) =>
+      `/teams/${teamId}/members/${userId}`,
+
+    removeMember: (teamId: string, userId: string) =>
+      `/teams/${teamId}/members/${userId}`,
   },
+
 
   tasks: {
     my: "/tasks/my",
