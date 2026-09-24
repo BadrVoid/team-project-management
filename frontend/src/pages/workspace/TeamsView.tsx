@@ -1,5 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { FolderKanban, Loader2, Users } from "lucide-react";
+import { FolderKanban, Loader2, Users, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { getMySpaces } from "@/api/apis/spaces.api";
 import { getProjectsBySpace } from "@/api/apis/projects.api";
@@ -11,6 +12,8 @@ interface TeamWithProject extends TeamSummaryResponse {
 }
 
 export default function TeamsView() {
+  const navigate = useNavigate();
+
   const {
     data: spaces,
     isLoading: spacesLoading,
@@ -91,34 +94,90 @@ export default function TeamsView() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => (
-          <TeamCard key={team.id} team={team} />
+          <TeamCard
+            key={team.id}
+            team={team}
+            onClick={() => navigate(`/teams/${team.id}`)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function TeamCard({ team }: { team: TeamWithProject }) {
+/* ============================================================================
+   Team Card
+============================================================================ */
+
+function TeamCard({
+  team,
+  onClick,
+}: {
+  team: TeamWithProject;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-        <Users className="h-5 w-5 text-primary" />
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        group
+        w-full
+        rounded-2xl
+        border
+        border-border
+        bg-background
+        p-5
+        text-left
+        shadow-sm
+        transition-all
+        duration-200
+        hover:-translate-y-0.5
+        hover:border-primary/30
+        hover:bg-muted/20
+        hover:shadow-md
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-primary/50
+      "
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <Users className="h-5 w-5 text-primary" />
+        </div>
+
+        <ArrowRight
+          className="
+            h-4
+            w-4
+            shrink-0
+            text-muted-foreground
+            transition-transform
+            duration-200
+            group-hover:translate-x-0.5
+            group-hover:text-primary
+          "
+        />
       </div>
 
-      <h3 className="mt-4 font-semibold">{team.name}</h3>
+      <h3 className="mt-4 truncate font-semibold">{team.name}</h3>
 
       <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
         {team.description || "No description provided."}
       </p>
 
       <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-        <FolderKanban className="h-3.5 w-3.5" />
+        <FolderKanban className="h-3.5 w-3.5 shrink-0" />
 
         <span className="truncate">{team.projectName}</span>
       </div>
-    </div>
+    </button>
   );
 }
+
+/* ============================================================================
+   Loading
+============================================================================ */
 
 function LoadingState() {
   return (
@@ -128,6 +187,10 @@ function LoadingState() {
   );
 }
 
+/* ============================================================================
+   Error
+============================================================================ */
+
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-10 text-center">
@@ -135,6 +198,10 @@ function ErrorState({ message }: { message: string }) {
     </div>
   );
 }
+
+/* ============================================================================
+   Empty
+============================================================================ */
 
 function EmptyState({
   title,

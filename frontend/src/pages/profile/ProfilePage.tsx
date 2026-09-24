@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
-import { Loader2, Save, UserRound, X, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+  UserRound,
+  X,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,12 +18,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
-import { useMyProfile, useUpdateMyProfile } from "@/hooks/useProfile";
+import {
+  useMyProfile,
+  useUpdateMyProfile,
+  useUploadAvatar,
+} from "@/hooks/useProfile";
 
 export default function ProfilePage() {
   const { data: profile, isLoading, isError } = useMyProfile();
   const updateProfile = useUpdateMyProfile();
+  const uploadAvatar = useUploadAvatar();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [bio, setBio] = useState("");
   const [university, setUniversity] = useState("");
@@ -30,6 +45,9 @@ export default function ProfilePage() {
   const [skillInput, setSkillInput] = useState("");
   const [tagInput, setTagInput] = useState("");
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   useEffect(() => {
     if (!profile) return;
 
@@ -40,6 +58,36 @@ export default function ProfilePage() {
     setSkills(profile.skills ?? []);
     setTags(profile.tags ?? []);
   }, [profile]);
+
+  // Clean up blob preview URL to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleRemoveAvatar = () => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setAvatarUrl("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const addSkill = () => {
     const value = skillInput.trim();
@@ -77,14 +125,30 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    let finalAvatarUrl = avatarUrl.trim();
+
+    // If a new file was selected, upload it first
+    if (selectedFile) {
+      try {
+        const uploadedUrl = await uploadAvatar.mutateAsync(selectedFile);
+        finalAvatarUrl = uploadedUrl;
+        setAvatarUrl(uploadedUrl);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      } catch (error) {
+        console.error("Failed to upload avatar image:", error);
+        return;
+      }
+    }
 
     updateProfile.mutate({
       bio: bio.trim(),
       university: university.trim(),
       department: department.trim(),
-      avatarUrl: avatarUrl.trim(),
+      avatarUrl: finalAvatarUrl,
       skills,
       tags,
     });
@@ -111,7 +175,8 @@ export default function ProfilePage() {
   const initials =
     `${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase();
 
-  const currentAvatar = avatarUrl || profile.avatarUrl;
+  const currentAvatar = previewUrl || avatarUrl || profile.avatarUrl;
+  const isSaving = updateProfile.isPending || uploadAvatar.isPending;
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
@@ -128,13 +193,13 @@ export default function ProfilePage() {
 
         <Button
           onClick={handleSubmit}
-          disabled={updateProfile.isPending}
+          disabled={isSaving}
           className="w-full gap-2 sm:w-auto"
         >
-          {updateProfile.isPending ? (
+          {isSaving ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Saving...
+              {uploadAvatar.isPending ? "Uploading image..." : "Saving..."}
             </>
           ) : (
             <>
@@ -150,17 +215,65 @@ export default function ProfilePage() {
         <div className="space-y-6 lg:sticky lg:top-6 lg:col-span-4">
           <Card>
             <CardContent className="flex flex-col items-center pt-6 text-center">
-              <div className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm">
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
+              {/* Interactive Avatar Container */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative flex size-28 cursor-pointer shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all hover:border-primary/50"
+              >
                 {currentAvatar ? (
                   <img
                     src={currentAvatar}
                     alt={`${profile.firstName} ${profile.lastName}`}
-                    className="size-full object-cover"
+                    className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
                   />
                 ) : (
                   <span className="text-2xl font-semibold text-muted-foreground">
                     {initials || <UserRound className="size-10" />}
                   </span>
+                )}
+
+                {/* Hover Camera Overlay */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <Camera className="size-6" />
+                  <span className="mt-1 text-[10px] font-medium">
+                    Upload Photo
+                  </span>
+                </div>
+              </div>
+
+              {/* Avatar Quick Action Buttons */}
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 gap-1.5 text-xs"
+                >
+                  <Camera className="size-3.5" />
+                  Change Photo
+                </Button>
+
+                {currentAvatar && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveAvatar}
+                    className="h-8 gap-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                    Remove
+                  </Button>
                 )}
               </div>
 
@@ -249,16 +362,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="avatarUrl">Avatar Image URL</Label>
-                <Input
-                  id="avatarUrl"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  maxLength={500}
-                />
-              </div>
             </CardContent>
           </Card>
 
@@ -331,7 +434,7 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={() => removeSkill(skill)}
-                          className="rounded-full hover:bg-muted-foreground/20 p-0.5 transition-colors"
+                          className="rounded-full p-0.5 transition-colors hover:bg-muted-foreground/20"
                         >
                           <X className="size-3 text-muted-foreground" />
                         </button>
@@ -374,7 +477,7 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="rounded-full hover:bg-muted-foreground/20 p-0.5 transition-colors"
+                          className="rounded-full p-0.5 transition-colors hover:bg-muted-foreground/20"
                         >
                           <X className="size-3 text-muted-foreground" />
                         </button>

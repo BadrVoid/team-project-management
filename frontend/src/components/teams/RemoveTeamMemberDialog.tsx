@@ -1,5 +1,4 @@
 import { Loader2, UserMinus } from "lucide-react";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,13 +13,10 @@ import {
 interface RemoveTeamMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-
   memberName: string;
-
   onRemove: () => void;
-
   isPending?: boolean;
-  isError?: boolean;
+  errorMessage?: string | null;
 }
 
 export function RemoveTeamMemberDialog({
@@ -29,11 +25,19 @@ export function RemoveTeamMemberDialog({
   memberName,
   onRemove,
   isPending = false,
-  isError = false,
+  errorMessage,
 }: RemoveTeamMemberDialogProps) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isPending) {
+      return;
+    }
+
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className=" bg-background">
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent className="bg-background">
         <AlertDialogHeader>
           <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
 
@@ -44,9 +48,9 @@ export function RemoveTeamMemberDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        {isError && (
-          <p className="text-sm text-destructive">
-            Failed to remove member. Please try again.
+        {errorMessage && (
+          <p role="alert" className="text-sm text-destructive">
+            {errorMessage}
           </p>
         )}
 

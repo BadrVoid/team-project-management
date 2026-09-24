@@ -1,5 +1,6 @@
 package com.badr.teamprojectmanagement.team.dtos;
 
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 
 import java.util.UUID;
@@ -11,5 +12,6 @@ public record TeamMemberResponse(
         String firstName,
         String lastName,
         String email,
-        TeamMemberRole role
+        TeamMemberRole role,
+        RequestStatus status
 ) {}

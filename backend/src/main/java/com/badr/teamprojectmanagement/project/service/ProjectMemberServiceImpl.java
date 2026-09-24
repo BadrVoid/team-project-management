@@ -80,7 +80,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                         user.getId(),
                         NotificationType.PROJECT_INVITATION,
                         "You have been invited to join the project: "
-                                + project.getName()
+                                + project.getName(),project.getId()
                 );
 
                 return mapToResponse(member);
@@ -104,7 +104,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
                 user.getId(),
                 NotificationType.PROJECT_INVITATION,
                 "You have been invited to join the project: "
-                        + project.getName()
+                        + project.getName(),project.getId()
         );
 
         return mapToResponse(member);

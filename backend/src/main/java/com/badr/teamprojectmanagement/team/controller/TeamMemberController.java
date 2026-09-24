@@ -1,7 +1,8 @@
 
-package com.badr.teamprojectmanagement.team;
+package com.badr.teamprojectmanagement.team.controller;
 
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
+import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.team.dtos.TeamMemberRequest;
 import com.badr.teamprojectmanagement.team.dtos.TeamMemberResponse;
 import com.badr.teamprojectmanagement.team.service.TeamMemberService;
@@ -104,6 +105,56 @@ public class TeamMemberController {
                         "Team member removed successfully",
                         null
                 )
+        );
+    }
+
+    @PatchMapping("/{userId}/accept")
+    public GlobalResponse<TeamMemberResponse> acceptInvitation(
+            @PathVariable UUID teamId,
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+
+        if (!currentUser.getId().equals(userId)) {
+            throw new ForbiddenException(
+                    "You can only accept your own invitation"
+            );
+        }
+
+        TeamMemberResponse response =
+                teamMemberService.acceptInvitation(
+                        teamId,
+                        currentUser.getId()
+                );
+
+        return GlobalResponse.success(
+                "Team invitation accepted successfully",
+                response
+        );
+    }
+
+    @PatchMapping("/{userId}/reject")
+    public GlobalResponse<TeamMemberResponse> rejectInvitation(
+            @PathVariable UUID teamId,
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+
+        if (!currentUser.getId().equals(userId)) {
+            throw new ForbiddenException(
+                    "You can only reject your own invitation"
+            );
+        }
+
+        TeamMemberResponse response =
+                teamMemberService.rejectInvitation(
+                        teamId,
+                        currentUser.getId()
+                );
+
+        return GlobalResponse.success(
+                "Team invitation rejected successfully",
+                response
         );
     }
 }

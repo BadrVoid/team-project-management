@@ -15,6 +15,9 @@ import com.badr.teamprojectmanagement.project.dtos.*;
 import com.badr.teamprojectmanagement.security.SecurityUtils;
 import com.badr.teamprojectmanagement.space.Space;
 import com.badr.teamprojectmanagement.space.SpaceRepository;
+import com.badr.teamprojectmanagement.task.TaskCommentRepository;
+import com.badr.teamprojectmanagement.task.TaskRepository;
+import com.badr.teamprojectmanagement.team.TeamMemberRepository;
 import com.badr.teamprojectmanagement.team.TeamRepository;
 import com.badr.teamprojectmanagement.team.dtos.TeamSummaryResponse;
 import com.badr.teamprojectmanagement.user.User;
@@ -37,6 +40,9 @@ public class ProjectServiceImpl implements ProjectService {
     private final TeamRepository teamRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectMapper projectMapper;
+    private final TeamMemberRepository teamMemberRepository;
+    private final TaskRepository taskRepository;
+    private final TaskCommentRepository taskCommentRepository;
 
     @Override
     public ProjectResponse createProject(ProjectCreateRequest request) {
@@ -141,18 +147,35 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void deleteProject(UUID id) {
-
         Project project = projectRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Project not found")
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         UUID currentUserId = SecurityUtils.getCurrentUserId();
-
         checkDeletePermission(project, currentUserId);
 
+        // 1. Delete task comments
+        taskCommentRepository.deleteByProjectId(id);
+
+        // 2. Delete tasks
+        taskRepository.deleteByProjectId(id);
+
+        // 3. Delete project members
+        projectMemberRepository.deleteByProjectId(id);
+
+        // 4. Delete team members
+        teamMemberRepository.deleteByProjectId(id);
+
+        // 5. Delete teams
+        teamRepository.deleteByProjectId(id);
+
+        // 6. Delete project
         projectRepository.delete(project);
     }
+
+
+
+
+
 
     @Override
     @Transactional(readOnly = true)

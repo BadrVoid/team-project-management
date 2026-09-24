@@ -83,3 +83,34 @@ export function getNotificationTypeLabel(
       return "Notification";
   }
 }
+
+export function getNotificationPath(
+  type: NotificationType,
+  referenceId: string | null
+): string | null {
+  if (!referenceId) {
+    return null;
+  }
+
+  switch (type) {
+    case "TASK_ASSIGNED":
+    case "TASK_UPDATED":
+    case "TASK_COMMENTED":
+      return `/tasks/${referenceId}`;
+
+    case "PROJECT_INVITATION":
+      return `/projects/${referenceId}`;
+
+    case "TEAM_INVITATION":
+      return `/teams/${referenceId}`;
+
+    case "SPACE_JOIN_REQUEST":
+    case "SPACE_JOIN_REQUEST_ACCEPTED":
+    case "SPACE_JOIN_REQUEST_REJECTED":
+      return `/spaces/${referenceId}`;
+
+    case "SYSTEM":
+    default:
+      return null;
+  }
+}

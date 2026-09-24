@@ -6,6 +6,8 @@ import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "notifications")
 @Getter
@@ -25,6 +27,9 @@ public class Notification extends BaseEntity {
 
     @Column(nullable = false, length = 255)
     private String message;
+
+    @Column(name = "reference_id")
+    private UUID referenceId;
 
     @Builder.Default
     @Column(nullable = false)

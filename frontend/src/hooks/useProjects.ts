@@ -2,11 +2,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  acceptProjectInvitation,
   createProject,
   deleteProject,
   getProjectById,
   getProjectDetails,
   getProjectsBySpace,
+  rejectProjectInvitation,
   updateProject,
 } from "@/api/apis/projects.api";
 
@@ -107,3 +109,76 @@ export function useDeleteProject() {
   });
 }
 
+
+
+export function useAcceptProjectInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      userId,
+    }: {
+      projectId: string;
+      userId: string;
+    }) => acceptProjectInvitation(projectId, userId),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "unread"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "count"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId, "details"],
+      });
+    },
+  });
+}
+
+export function useRejectProjectInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      userId,
+    }: {
+      projectId: string;
+      userId: string;
+    }) => rejectProjectInvitation(projectId, userId),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "unread"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "count"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId, "details"],
+      });
+    },
+  });
+}

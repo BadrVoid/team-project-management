@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
 import { useUpdateTeam } from "@/hooks/useTeams";
 import type { TeamResponse } from "@/api/types";
 
@@ -20,6 +18,33 @@ interface EditTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   team: TeamResponse;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  const axiosError = error as {
+    response?: {
+      data?: {
+        message?: string;
+        error?: string;
+      };
+    };
+    message?: string;
+  };
+
+  return (
+    axiosError?.response?.data?.message ||
+    axiosError?.response?.data?.error ||
+    axiosError?.message ||
+    "Failed to update team. Please try again."
+  );
 }
 
 export function EditTeamDialog({
@@ -33,19 +58,15 @@ export function EditTeamDialog({
   const updateTeamMutation = useUpdateTeam();
 
   useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName(team.name);
-      setDescription(team.description ?? "");
-      updateTeamMutation.reset();
+    if (!open) {
+      return;
     }
-  }, [open, team, updateTeamMutation]);
 
-  useEffect(() => {
-    if (updateTeamMutation.isSuccess) {
-      onOpenChange(false);
-    }
-  }, [updateTeamMutation.isSuccess, onOpenChange]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setName(team.name);
+    setDescription(team.description ?? "");
+    updateTeamMutation.reset();
+  }, [open, team.id]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -54,19 +75,34 @@ export function EditTeamDialog({
       return;
     }
 
-    updateTeamMutation.mutate({
-      id: team.id,
-      projectId: team.projectId,
-      data: {
-        name: name.trim(),
-        description: description.trim() || undefined,
+    updateTeamMutation.mutate(
+      {
+        id: team.id,
+        projectId: team.projectId,
+        data: {
+          name: name.trim(),
+          description: description.trim() || undefined,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+      },
+    );
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (updateTeamMutation.isPending) {
+      return;
+    }
+
+    onOpenChange(nextOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md  bg-background">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="bg-background sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Team</DialogTitle>
 
@@ -102,8 +138,8 @@ export function EditTeamDialog({
           </div>
 
           {updateTeamMutation.isError && (
-            <p className="text-sm text-destructive">
-              Failed to update team. Please try again.
+            <p role="alert" className="text-sm text-destructive">
+              {getErrorMessage(updateTeamMutation.error)}
             </p>
           )}
 

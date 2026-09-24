@@ -1,21 +1,42 @@
-import { useState } from "react";
 import { CheckSquare, FolderKanban, Users } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import ProjectsView from "./ProjectsView";
 import TasksView from "./TasksView";
 import TeamsView from "./TeamsView";
+
 type WorkspaceView = "projects" | "teams" | "tasks";
 
 export default function WorkspacePage() {
-  const [activeView, setActiveView] = useState<WorkspaceView>("projects");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read current tab from query string, defaulting to "projects"
+  const rawTab = searchParams.get("tab");
+  const activeView: WorkspaceView =
+    rawTab === "teams" || rawTab === "tasks" ? rawTab : "projects";
+
+  const handleTabChange = (view: WorkspaceView) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (view === "projects") {
+          next.delete("tab");
+        } else {
+          next.set("tab", view);
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <section>
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-            <FolderKanban className="h-7 w-7 text-primary" />
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+            <FolderKanban className="size-7 text-primary" />
           </div>
 
           <div>
@@ -29,28 +50,28 @@ export default function WorkspacePage() {
       </section>
 
       {/* Quick Navigation */}
-      <div className="rounded-2xl border border-border bg-background p-2 shadow-sm">
+      <div className="rounded-2xl border border-border bg-background p-2 shadow-sm flex justify-center">
         <nav className="flex gap-1 overflow-x-auto">
           <WorkspaceTab
             active={activeView === "projects"}
-            onClick={() => setActiveView("projects")}
-            icon={<FolderKanban className="h-4 w-4" />}
+            onClick={() => handleTabChange("projects")}
+            icon={<FolderKanban className="size-4" />}
           >
             Projects
           </WorkspaceTab>
 
           <WorkspaceTab
             active={activeView === "teams"}
-            onClick={() => setActiveView("teams")}
-            icon={<Users className="h-4 w-4" />}
+            onClick={() => handleTabChange("teams")}
+            icon={<Users className="size-4" />}
           >
             Teams
           </WorkspaceTab>
 
           <WorkspaceTab
             active={activeView === "tasks"}
-            onClick={() => setActiveView("tasks")}
-            icon={<CheckSquare className="h-4 w-4" />}
+            onClick={() => handleTabChange("tasks")}
+            icon={<CheckSquare className="size-4" />}
           >
             Tasks
           </WorkspaceTab>

@@ -6,23 +6,17 @@ import {
 } from "@tanstack/react-query";
 
 import { teamMembersApi } from "@/api/apis/team-members.api";
-
-import type {
-  TeamMemberRequest,
-} from "@/api/types";
+import type { TeamMemberRequest } from "@/api/types";
 
 export function useTeamMembers(teamId: string) {
   return useQuery({
     queryKey: ["teams", teamId, "members"],
-
-    queryFn: () =>
-      teamMembersApi.getTeamMembers(teamId),
-
+    queryFn: () => teamMembersApi.getTeamMembers(teamId),
     enabled: !!teamId,
   });
 }
 
-export function useAddTeamMember(teamId: string) {
+export function useInviteTeamMember(teamId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -41,9 +35,7 @@ export function useAddTeamMember(teamId: string) {
   });
 }
 
-export function useUpdateTeamMemberRole(
-  teamId: string,
-) {
+export function useUpdateTeamMemberRole(teamId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -64,33 +56,20 @@ export function useUpdateTeamMemberRole(
       queryClient.invalidateQueries({
         queryKey: ["teams", teamId, "members"],
       });
-
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId],
-      });
     },
   });
 }
 
-export function useRemoveTeamMember(
-  teamId: string,
-) {
+export function useRemoveTeamMember(teamId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (userId: string) =>
-      teamMembersApi.removeMember(
-        teamId,
-        userId,
-      ),
+      teamMembersApi.removeMember(teamId, userId),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["teams", teamId, "members"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId],
       });
     },
   });

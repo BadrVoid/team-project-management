@@ -2,6 +2,7 @@ package com.badr.teamprojectmanagement.team.service;
 
 import com.badr.teamprojectmanagement.common.enums.ProjectMemberRole;
 import com.badr.teamprojectmanagement.common.enums.RequestStatus;
+import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 import com.badr.teamprojectmanagement.common.enums.UserRole;
 import com.badr.teamprojectmanagement.exception.ForbiddenException;
 import com.badr.teamprojectmanagement.exception.ResourceNotFoundException;
@@ -12,6 +13,8 @@ import com.badr.teamprojectmanagement.project.ProjectRepository;
 import com.badr.teamprojectmanagement.project.dtos.ProjectMemberRequest;
 import com.badr.teamprojectmanagement.security.SecurityUtils;
 import com.badr.teamprojectmanagement.team.Team;
+import com.badr.teamprojectmanagement.team.TeamMember;
+import com.badr.teamprojectmanagement.team.TeamMemberRepository;
 import com.badr.teamprojectmanagement.team.TeamRepository;
 import com.badr.teamprojectmanagement.team.dtos.TeamCreateRequest;
 import com.badr.teamprojectmanagement.team.dtos.TeamResponse;
@@ -34,14 +37,19 @@ public class TeamServiceImpl implements TeamService {
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     @Override
-    public TeamResponse createTeam(TeamCreateRequest request) {
+    @Transactional
+    public TeamResponse createTeam(UUID userId, TeamCreateRequest request) {
 
         Project project = projectRepository.findById(request.projectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         checkProjectTeamManagementPermission(project);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Team team = Team.builder()
                 .project(project)
@@ -50,6 +58,15 @@ public class TeamServiceImpl implements TeamService {
                 .build();
 
         teamRepository.save(team);
+
+        TeamMember teamMember = TeamMember.builder()
+                .team(team)
+                .user(user)
+                .role(TeamMemberRole.LEADER)
+                .status(RequestStatus.ACCEPTED)
+                .build();
+
+        teamMemberRepository.save(teamMember);
 
         return mapToResponse(team);
     }

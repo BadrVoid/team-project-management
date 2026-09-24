@@ -1,6 +1,6 @@
-
 package com.badr.teamprojectmanagement.task.controller;
 
+import com.badr.teamprojectmanagement.common.enums.TaskStatus;
 import com.badr.teamprojectmanagement.common.response.GlobalResponse;
 import com.badr.teamprojectmanagement.task.dtos.TaskCreateRequest;
 import com.badr.teamprojectmanagement.task.dtos.TaskDetailsResponse;
@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +31,10 @@ public class TaskController {
             @Valid @RequestBody TaskCreateRequest request
     ) {
         TaskResponse response =
-                taskService.createTask(user.getId(), request);
+                taskService.createTask(
+                        user.getId(),
+                        request
+                );
 
         return GlobalResponse.success(
                 "Task created successfully",
@@ -42,10 +44,14 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public GlobalResponse<TaskResponse> getTaskById(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
     ) {
         TaskResponse response =
-                taskService.getTaskById(id);
+                taskService.getTaskById(
+                        id,
+                        user.getId()
+                );
 
         return GlobalResponse.success(
                 "Task retrieved successfully",
@@ -55,10 +61,14 @@ public class TaskController {
 
     @GetMapping("/{id}/details")
     public GlobalResponse<TaskDetailsResponse> getTaskDetails(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user
     ) {
         TaskDetailsResponse response =
-                taskService.getTaskDetails(id);
+                taskService.getTaskDetails(
+                        id,
+                        user.getId()
+                );
 
         return GlobalResponse.success(
                 "Task details retrieved successfully",
@@ -68,10 +78,14 @@ public class TaskController {
 
     @GetMapping("/team/{teamId}")
     public GlobalResponse<List<TaskResponse>> getTasksByTeam(
-            @PathVariable UUID teamId
+            @PathVariable UUID teamId,
+            @AuthenticationPrincipal User user
     ) {
         List<TaskResponse> response =
-                taskService.getTasksByTeam(teamId);
+                taskService.getTasksByTeam(
+                        teamId,
+                        user.getId()
+                );
 
         return GlobalResponse.success(
                 "Team tasks retrieved successfully",
@@ -111,7 +125,6 @@ public class TaskController {
         );
     }
 
-
     @DeleteMapping("/{id}")
     public GlobalResponse<Void> deleteTask(
             @PathVariable UUID id,
@@ -125,6 +138,25 @@ public class TaskController {
         return GlobalResponse.success(
                 "Task deleted successfully",
                 null
+        );
+    }
+
+    @PatchMapping("/{id}/status")
+    public GlobalResponse<TaskResponse> updateTaskStatus(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User user,
+            @RequestParam TaskStatus status
+    ) {
+        TaskResponse response =
+                taskService.updateTaskStatus(
+                        id,
+                        user.getId(),
+                        status
+                );
+
+        return GlobalResponse.success(
+                "Task status updated successfully",
+                response
         );
     }
 }

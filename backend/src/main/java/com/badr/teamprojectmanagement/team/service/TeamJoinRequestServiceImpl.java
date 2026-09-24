@@ -260,7 +260,8 @@ public class TeamJoinRequestServiceImpl
                 user.getId(),
                 NotificationType.TEAM_INVITATION,
                 "You have been invited to join team: "
-                        + team.getName()
+                        + team.getName(),
+                team.getId()
         );
 
         return mapToResponse(savedRequest);

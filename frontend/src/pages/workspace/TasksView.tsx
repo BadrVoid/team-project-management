@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CheckSquare, Loader2 } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckSquare, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { getMyTasks } from "@/api/apis/tasks.api";
 import type { TaskResponse } from "@/api/types";
 
 export default function TasksView() {
+  const navigate = useNavigate();
+
   const {
     data: tasks = [],
     isLoading,
@@ -56,18 +59,54 @@ export default function TasksView() {
 
       <div className="space-y-3">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            onClick={() => navigate(`/tasks/${task.id}`)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function TaskCard({ task }: { task: TaskResponse }) {
+/* ============================================================================
+   Task Card
+============================================================================ */
+
+function TaskCard({
+  task,
+  onClick,
+}: {
+  task: TaskResponse;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:shadow-md">
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        group
+        w-full
+        rounded-2xl
+        border
+        border-border
+        bg-background
+        p-5
+        text-left
+        shadow-sm
+        transition-all
+        duration-200
+        hover:border-primary/30
+        hover:bg-muted/20
+        hover:shadow-md
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-primary/50
+      "
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <CheckSquare className="h-4 w-4 text-primary" />
@@ -85,6 +124,19 @@ function TaskCard({ task }: { task: TaskResponse }) {
           <StatusBadge status={task.status} />
 
           <PriorityBadge priority={task.priority} />
+
+          <ArrowRight
+            className="
+              ml-1
+              h-4
+              w-4
+              text-muted-foreground
+              transition-transform
+              duration-200
+              group-hover:translate-x-0.5
+              group-hover:text-primary
+            "
+          />
         </div>
       </div>
 
@@ -95,9 +147,13 @@ function TaskCard({ task }: { task: TaskResponse }) {
           <span>Due {formatDate(task.dueDate)}</span>
         </div>
       )}
-    </div>
+    </button>
   );
 }
+
+/* ============================================================================
+   Status Badge
+============================================================================ */
 
 function StatusBadge({ status }: { status: TaskResponse["status"] }) {
   return (
@@ -107,6 +163,10 @@ function StatusBadge({ status }: { status: TaskResponse["status"] }) {
   );
 }
 
+/* ============================================================================
+   Priority Badge
+============================================================================ */
+
 function PriorityBadge({ priority }: { priority: TaskResponse["priority"] }) {
   return (
     <span className="rounded-full border border-border px-2.5 py-1 text-xs font-medium">
@@ -114,6 +174,10 @@ function PriorityBadge({ priority }: { priority: TaskResponse["priority"] }) {
     </span>
   );
 }
+
+/* ============================================================================
+   Helpers
+============================================================================ */
 
 function formatText(value: string) {
   return value
@@ -123,5 +187,9 @@ function formatText(value: string) {
 }
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString();
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

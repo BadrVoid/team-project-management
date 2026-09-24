@@ -105,6 +105,7 @@ export interface PublicSpaceResponse {
   membershipStatus: SpaceMembershipStatus;
 }
 
+
 // Project
 
 export type ProjectStatus =
@@ -174,6 +175,24 @@ export interface ProjectDetailsResponse {
   teams: TeamSummaryResponse[];
 }
 
+export interface TeamSummaryResponse {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface ProjectDetailsResponse {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  startDate: string | null;
+  endDate: string | null;
+  createdBy: UserSummaryResponse;
+  members: ProjectMemberResponse[];
+  teams: TeamSummaryResponse[];
+}
+
 // Team
 
 export interface TeamResponse {
@@ -211,6 +230,7 @@ export interface TeamMemberResponse {
   lastName: string;
   email: string;
   role: TeamMemberRole;
+  status: MembershipStatus;
 }
 
 // Task
@@ -268,6 +288,7 @@ export interface NotificationResponse {
   id: string;
   type: NotificationType;
   message: string;
+  referenceId: string | null;
   read: boolean;
   createdAt: string;
 }
@@ -300,4 +321,39 @@ export interface UserProfileResponse {
   avatarUrl: string | null;
   skills: string[];
   tags: string[];
+}
+
+
+export interface CreateTaskRequest {
+  teamId: string;
+  title: string;
+  description?: string;
+  priority?: TaskPriority;
+  dueDate?: string | null;
+  assignedToId?: string | null;
+}
+
+export interface UpdateTaskRequest {
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  dueDate?: string | null;
+  assignedToId?: string | null;
+}
+
+
+export interface TaskCommentResponse {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface CreateTaskCommentRequest {
+  content: string;
 }

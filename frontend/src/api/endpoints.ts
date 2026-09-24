@@ -1,4 +1,4 @@
-// src/api/endpoints.ts
+
 
 export const endpoints = {
   auth: {
@@ -19,7 +19,6 @@ export const endpoints = {
     join: (id: string) => `/spaces/${id}/join`,
   },
 
-
   projects: {
     create: "/projects",
     bySpace: (spaceId: string) => `/projects/space/${spaceId}`,
@@ -37,10 +36,13 @@ export const endpoints = {
 
     updateMemberRole: (projectId: string, userId: string) =>
       `/projects/${projectId}/members/${userId}/role`,
+
+    acceptInvitation: (projectId: string, userId: string) =>
+      `/projects/${projectId}/members/${userId}/accept`,
+
+    rejectInvitation: (projectId: string, userId: string) =>
+      `/projects/${projectId}/members/${userId}/reject`,
   },
-
-
-
 
   teams: {
     create: "/teams",
@@ -62,14 +64,28 @@ export const endpoints = {
 
     removeMember: (teamId: string, userId: string) =>
       `/teams/${teamId}/members/${userId}`,
-  },
 
+    acceptInvitation: (teamId: string, userId: string) =>
+      `/teams/${teamId}/members/${userId}/accept`,
+
+    rejectInvitation: (teamId: string, userId: string) =>
+      `/teams/${teamId}/members/${userId}/reject`,
+  },
 
   tasks: {
     my: "/tasks/my",
-    byTeam: (teamId: string) => `/tasks/team/${teamId}`,
-    byId: (id: string) => `/tasks/${id}`,
-    details: (id: string) => `/tasks/${id}/details`,
+
+    byTeam: (teamId: string) =>
+      `/tasks/team/${teamId}`,
+
+    byId: (id: string) =>
+      `/tasks/${id}`,
+
+    details: (id: string) =>
+      `/tasks/${id}/details`,
+
+    status: (id: string) =>
+      `/tasks/${id}/status`,
   },
 
   notifications: {
@@ -87,5 +103,8 @@ export const endpoints = {
     byId: (id: string) => `/users/${id}`,
     discover: "/users/discover",
   },
-  profiles: { me: "/profiles/me", },
+  profiles: {
+    me: "/profiles/me",
+    avatar: "/profiles/me/avatar",
+  },
 };

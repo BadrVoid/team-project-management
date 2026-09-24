@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-
 import { useUpdateTeamMemberRole } from "@/hooks/useTeamMembers";
 import type { TeamMemberResponse, TeamMemberRole } from "@/api/types";
 
@@ -19,6 +17,33 @@ interface UpdateTeamMemberRoleDialogProps {
   onOpenChange: (open: boolean) => void;
   teamId: string;
   member: TeamMemberResponse;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  const axiosError = error as {
+    response?: {
+      data?: {
+        message?: string;
+        error?: string;
+      };
+    };
+    message?: string;
+  };
+
+  return (
+    axiosError?.response?.data?.message ||
+    axiosError?.response?.data?.error ||
+    axiosError?.message ||
+    "Failed to update member role. Please try again."
+  );
 }
 
 export function UpdateTeamMemberRoleDialog({
@@ -32,34 +57,49 @@ export function UpdateTeamMemberRoleDialog({
   const mutation = useUpdateTeamMemberRole(teamId);
 
   useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRole(member.role);
+    if (!open) {
+      return;
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRole(member.role);
+    mutation.reset();
+  }, [open, member.role]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (mutation.isPending) {
+      return;
+    }
+
+    if (!nextOpen) {
       mutation.reset();
     }
-  }, [open, member.role, mutation]);
 
-  useEffect(() => {
-    if (mutation.isSuccess) {
-      onOpenChange(false);
-    }
-  }, [mutation.isSuccess, onOpenChange]);
+    onOpenChange(nextOpen);
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    mutation.mutate({
-      userId: member.userId,
-      data: {
+    mutation.mutate(
+      {
         userId: member.userId,
-        role,
+        data: {
+          userId: member.userId,
+          role,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+      },
+    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md  bg-background">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="bg-background sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Change Member Role</DialogTitle>
 
@@ -87,8 +127,8 @@ export function UpdateTeamMemberRoleDialog({
           </div>
 
           {mutation.isError && (
-            <p className="text-sm text-destructive">
-              Failed to update member role. Please try again.
+            <p role="alert" className="text-sm text-destructive">
+              {getErrorMessage(mutation.error)}
             </p>
           )}
 
@@ -96,7 +136,7 @@ export function UpdateTeamMemberRoleDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={mutation.isPending}
             >
               Cancel

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Compass, Globe2, Loader2, Search, Users, X } from "lucide-react";
+import { Compass, Globe2, Loader2, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { useJoinSpace, usePublicSpaces } from "@/hooks/useSpaces";
+import { SpaceSearchToolbar } from "@/components/spaces/SpaceSearchToolbar";
 
 type StatusFilter = "ALL" | "JOINED" | "AVAILABLE" | "PENDING";
 
@@ -14,27 +15,27 @@ export default function PublicSpacesPage() {
   const { data: spaces = [], isLoading, isError } = usePublicSpaces();
   const joinMutation = useJoinSpace();
 
-  const totalSpaces = spaces.length;
+  // Compute status counts in a single pass
+  const counts = useMemo(() => {
+    let joined = 0;
+    let pending = 0;
+    let available = 0;
 
-  const memberSpaces = useMemo(
-    () =>
-      spaces.filter(
-        (space) =>
-          space.membershipStatus === "MEMBER" ||
-          space.membershipStatus === "OWNER",
-      ).length,
-    [spaces],
-  );
+    for (const space of spaces) {
+      if (
+        space.membershipStatus === "MEMBER" ||
+        space.membershipStatus === "OWNER"
+      ) {
+        joined++;
+      } else if (space.membershipStatus === "PENDING") {
+        pending++;
+      } else if (space.membershipStatus === "NONE") {
+        available++;
+      }
+    }
 
-  const pendingSpaces = useMemo(
-    () => spaces.filter((space) => space.membershipStatus === "PENDING").length,
-    [spaces],
-  );
-
-  const availableSpaces = useMemo(
-    () => spaces.filter((space) => space.membershipStatus === "NONE").length,
-    [spaces],
-  );
+    return { total: spaces.length, joined, pending, available };
+  }, [spaces]);
 
   const filteredSpaces = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -59,14 +60,12 @@ export default function PublicSpacesPage() {
 
   return (
     <div className="space-y-6 pb-10">
-      {/* Integrated Header Banner with Search & Filters */}
+      {/* Header Banner */}
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-6 backdrop-blur-md shadow-sm sm:p-8">
-        {/* Ambient Glow */}
         <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-primary/10 blur-3xl" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1 space-y-4">
-            {/* Header Title */}
             <div className="flex items-center gap-3">
               <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Compass className="size-6" />
@@ -81,80 +80,39 @@ export default function PublicSpacesPage() {
               </div>
             </div>
 
-            {/* Embedded Search & Status Filter Toolbar */}
             {!isLoading && !isError && spaces.length > 0 && (
-              <div className="pt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
-                {/* Search Bar Input */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search public spaces..."
-                    className="h-10 w-full rounded-xl border border-border/80 bg-background/80 pl-10 pr-9 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={() => setSearch("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex flex-wrap items-center rounded-xl border border-border/80 bg-background/60 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("ALL")}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
-                      statusFilter === "ALL"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    All ({totalSpaces})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("AVAILABLE")}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
-                      statusFilter === "AVAILABLE"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Available ({availableSpaces})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("JOINED")}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
-                      statusFilter === "JOINED"
-                        ? "bg-sky-500/15 text-sky-600 dark:text-sky-400 shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Joined ({memberSpaces})
-                  </button>
-                  {pendingSpaces > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setStatusFilter("PENDING")}
-                      className={`rounded-lg px-3 py-1 text-xs font-medium transition-all ${
-                        statusFilter === "PENDING"
-                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Pending ({pendingSpaces})
-                    </button>
-                  )}
-                </div>
-              </div>
+              <SpaceSearchToolbar
+                search={search}
+                onSearchChange={setSearch}
+                activeFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+                filterOptions={[
+                  { id: "ALL", label: "All", count: counts.total },
+                  {
+                    id: "AVAILABLE",
+                    label: "Available",
+                    count: counts.available,
+                  },
+                  {
+                    id: "JOINED",
+                    label: "Joined",
+                    count: counts.joined,
+                    activeClass:
+                      "bg-sky-500/15 text-sky-600 dark:text-sky-400 shadow-sm",
+                  },
+                  ...(counts.pending > 0
+                    ? [
+                        {
+                          id: "PENDING" as StatusFilter,
+                          label: "Pending",
+                          count: counts.pending,
+                          activeClass:
+                            "bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-sm",
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             )}
           </div>
         </div>
@@ -187,7 +145,7 @@ export default function PublicSpacesPage() {
 
       {/* Empty Database */}
       {!isLoading && !isError && spaces.length === 0 && (
-        <div className="flex min-h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-border px-6 text-center bg-card/30">
+        <div className="flex min-h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-card/30 px-6 text-center">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Globe2 className="size-6" />
           </div>
@@ -198,12 +156,12 @@ export default function PublicSpacesPage() {
         </div>
       )}
 
-      {/* Search/Filter Empty Results */}
+      {/* Empty Search/Filter Results */}
       {!isLoading &&
         !isError &&
         spaces.length > 0 &&
         filteredSpaces.length === 0 && (
-          <div className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-border px-6 text-center bg-card/30">
+          <div className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-card/30 px-6 text-center">
             <Search className="size-10 text-muted-foreground/50" />
             <h2 className="mt-4 text-lg font-semibold">No spaces found</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -222,7 +180,7 @@ export default function PublicSpacesPage() {
           </div>
         )}
 
-      {/* Spaces Grid */}
+      {/* Grid */}
       {!isLoading && !isError && filteredSpaces.length > 0 && (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filteredSpaces.map((space) => {
@@ -234,22 +192,18 @@ export default function PublicSpacesPage() {
                 key={space.id}
                 className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
               >
-                {/* Hover Gradient Effect */}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary/10 via-primary/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
                 <div className="relative p-6">
-                  {/* Card Header */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
                         <Globe2 className="size-5" />
                       </div>
-
                       <div className="min-w-0">
                         <h3 className="truncate text-lg font-semibold">
                           {space.name}
                         </h3>
-
                         <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
                           <Globe2 className="size-3" />
                           Public
@@ -258,13 +212,11 @@ export default function PublicSpacesPage() {
                     </div>
                   </div>
 
-                  {/* Description */}
                   <p className="mt-4 min-h-12 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                     {space.description || "No description provided."}
                   </p>
                 </div>
 
-                {/* Card Footer */}
                 <div className="relative flex items-center justify-between border-t border-border/80 bg-muted/20 px-6 py-4">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Users className="size-3.5" />
@@ -281,6 +233,7 @@ export default function PublicSpacesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      asChild
                       className="text-primary hover:bg-primary/10 hover:text-primary"
                     >
                       <Link to={`/spaces/${space.id}`}>Open</Link>

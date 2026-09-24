@@ -1,17 +1,21 @@
 import { useState } from "react";
+
 import { Link, useParams } from "react-router-dom";
+
 import {
   ArrowLeft,
+  FolderKanban,
   Globe2,
   Lock,
   Pencil,
   Plus,
   Trash2,
-  FolderKanban,
 } from "lucide-react";
 
-import { useSpace } from "@/hooks/useSpaces";
 import { useProjectsBySpace } from "@/hooks/useProjects";
+import { useAuth } from "@/context/AuthContext";
+import { getUserIdFromToken } from "@/utils/jwt";
+import { useSpace } from "@/hooks/useSpaces";
 
 import type { SpaceResponse } from "@/api/types";
 
@@ -22,14 +26,16 @@ import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
 export default function SpaceDetailsPage() {
   const { spaceId } = useParams<{ spaceId: string }>();
 
+  const { accessToken } = useAuth();
+
   const {
     data: space,
     isLoading: isSpaceLoading,
     isError: isSpaceError,
-  } = useSpace(spaceId!);
+  } = useSpace(spaceId ?? "");
 
   const { data: projects = [], isLoading: isProjectsLoading } =
-    useProjectsBySpace(spaceId!);
+    useProjectsBySpace(spaceId ?? "");
 
   const [editingSpace, setEditingSpace] = useState<SpaceResponse | null>(null);
 
@@ -39,11 +45,17 @@ export default function SpaceDetailsPage() {
 
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
 
+  const currentUserId = getUserIdFromToken(accessToken);
+
+  const isOwner = !!currentUserId && !!space && currentUserId === space.ownerId;
+
   if (isSpaceLoading) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="h-5 w-32 rounded-lg bg-muted" />
+
         <div className="h-48 rounded-3xl bg-muted" />
+
         <div className="space-y-4">
           <div className="h-8 w-48 rounded-lg bg-muted" />
           <div className="h-36 rounded-2xl bg-muted" />
@@ -54,22 +66,23 @@ export default function SpaceDetailsPage() {
 
   if (isSpaceError || !space) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-card/30 p-8 text-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
           <Lock className="size-6 text-muted-foreground" />
         </div>
 
-        <h2 className="mt-4 text-xl font-bold tracking-tight">
-          Space not found
-        </h2>
+        <div className="text-center">
+          <h2 className="text-xl font-bold tracking-tight">Space not found</h2>
 
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          This space may not exist, or you might not have permission to view it.
-        </p>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            This space may not exist, or you might not have permission to view
+            it.
+          </p>
+        </div>
 
         <Link
           to="/spaces"
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95"
         >
           <ArrowLeft className="size-4" />
           Back to Spaces
@@ -95,6 +108,7 @@ export default function SpaceDetailsPage() {
       <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/90 p-6 shadow-sm backdrop-blur-sm sm:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-4">
+            {/* Visibility Icon */}
             <div
               className={`flex size-14 shrink-0 items-center justify-center rounded-2xl ${
                 isPublic
@@ -109,6 +123,7 @@ export default function SpaceDetailsPage() {
               )}
             </div>
 
+            {/* Space Information */}
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -121,6 +136,7 @@ export default function SpaceDetailsPage() {
                   ) : (
                     <Lock className="size-3" />
                   )}
+
                   {isPublic ? "Public Space" : "Private Space"}
                 </span>
               </div>
@@ -131,25 +147,30 @@ export default function SpaceDetailsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start pt-2 md:pt-0">
-            <button
-              type="button"
-              onClick={() => setEditingSpace(space)}
-              aria-label="Edit space"
-              className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-            >
-              <Pencil className="size-4" />
-            </button>
+          {/* Owner Actions */}
+          {isOwner && (
+            <div className="flex items-center gap-2 self-start pt-2 md:pt-0">
+              <button
+                type="button"
+                onClick={() => setEditingSpace(space)}
+                aria-label="Edit space"
+                title="Edit space"
+                className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+              >
+                <Pencil className="size-4" />
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setDeletingSpace(space)}
-              aria-label="Delete space"
-              className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => setDeletingSpace(space)}
+                aria-label="Delete space"
+                title="Delete space"
+                className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -158,21 +179,25 @@ export default function SpaceDetailsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold tracking-tight">Projects</h2>
+
             <p className="text-sm text-muted-foreground">
               Projects contained within this space.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreateProjectOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
-          >
-            <Plus className="size-4" />
-            New Project
-          </button>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => setCreateProjectOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
+            >
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">New Project</span>
+            </button>
+          )}
         </div>
 
+        {/* Loading */}
         {isProjectsLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((item) => (
@@ -183,6 +208,7 @@ export default function SpaceDetailsPage() {
             ))}
           </div>
         ) : projects.length === 0 ? (
+          /* Empty */
           <div className="flex min-h-60 flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card/20 p-8 text-center">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <FolderKanban className="size-6" />
@@ -194,16 +220,19 @@ export default function SpaceDetailsPage() {
               Create your first project inside <strong>{space.name}</strong>.
             </p>
 
-            <button
-              type="button"
-              onClick={() => setCreateProjectOpen(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              <Plus className="size-4" />
-              Create Project
-            </button>
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setCreateProjectOpen(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                <Plus className="size-4" />
+                Create Project
+              </button>
+            )}
           </div>
         ) : (
+          /* Project Grid */
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
               <Link
@@ -233,27 +262,35 @@ export default function SpaceDetailsPage() {
       </section>
 
       {/* Dialogs */}
-      <EditSpaceDialog
-        open={!!editingSpace}
-        onOpenChange={(open) => {
-          if (!open) setEditingSpace(null);
-        }}
-        space={editingSpace}
-      />
+      {isOwner && (
+        <>
+          <EditSpaceDialog
+            open={!!editingSpace}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingSpace(null);
+              }
+            }}
+            space={editingSpace}
+          />
 
-      <DeleteSpaceDialog
-        open={!!deletingSpace}
-        onOpenChange={(open) => {
-          if (!open) setDeletingSpace(null);
-        }}
-        space={deletingSpace}
-      />
+          <DeleteSpaceDialog
+            open={!!deletingSpace}
+            onOpenChange={(open) => {
+              if (!open) {
+                setDeletingSpace(null);
+              }
+            }}
+            space={deletingSpace}
+          />
 
-      <CreateProjectDialog
-        open={createProjectOpen}
-        onOpenChange={setCreateProjectOpen}
-        spaceId={spaceId!}
-      />
+          <CreateProjectDialog
+            open={createProjectOpen}
+            onOpenChange={setCreateProjectOpen}
+            spaceId={space.id}
+          />
+        </>
+      )}
     </div>
   );
 }

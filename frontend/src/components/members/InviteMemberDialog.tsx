@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { Loader2, Search, UserPlus, X } from "lucide-react";
 
 import {
@@ -13,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useDiscoverUsers } from "@/hooks/useUsers";
-import type { UserDiscoveryResponse } from "@/api/types";
+
+import type { ProjectMemberRole, UserDiscoveryResponse } from "@/api/types";
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -22,10 +24,11 @@ interface InviteMemberDialogProps {
   title?: string;
   description?: string;
 
-  roleOptions: string[];
-  defaultRole?: string;
+  roleOptions: ProjectMemberRole[];
+  defaultRole?: ProjectMemberRole;
 
-  onInvite: (userId: string, role: string) => void;
+  onInvite: (userId: string, role: ProjectMemberRole) => void;
+
   isPending?: boolean;
   isError?: boolean;
 }
@@ -42,12 +45,19 @@ export function InviteMemberDialog({
   isError = false,
 }: InviteMemberDialogProps) {
   const [search, setSearch] = useState("");
+
   const [selectedUser, setSelectedUser] =
     useState<UserDiscoveryResponse | null>(null);
 
-  const [role, setRole] = useState(defaultRole ?? roleOptions[0] ?? "");
+  const [role, setRole] = useState<ProjectMemberRole | "">(
+    defaultRole ?? roleOptions?.[0] ?? "",
+  );
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // =========================
+  // Debounce search
+  // =========================
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -57,6 +67,10 @@ export function InviteMemberDialog({
     return () => clearTimeout(timeout);
   }, [search]);
 
+  // =========================
+  // Discover users
+  // =========================
+
   const { data, isLoading } = useDiscoverUsers({
     keyword: debouncedSearch || undefined,
     page: 0,
@@ -65,15 +79,26 @@ export function InviteMemberDialog({
 
   const users = useMemo(() => data?.content ?? [], [data]);
 
+  // =========================
+  // Reset dialog
+  // =========================
+
   useEffect(() => {
     if (!open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearch("");
+
       setDebouncedSearch("");
+
       setSelectedUser(null);
-      setRole(defaultRole ?? roleOptions[0] ?? "");
+
+      setRole(defaultRole ?? roleOptions?.[0] ?? "");
     }
   }, [open, defaultRole, roleOptions]);
+
+  // =========================
+  // Invite
+  // =========================
 
   const handleInvite = () => {
     if (!selectedUser || !role) {
@@ -85,7 +110,7 @@ export function InviteMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-background">
+      <DialogContent className="bg-background sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
 
@@ -93,7 +118,10 @@ export function InviteMemberDialog({
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Selected user */}
+          {/* =========================
+              Selected User
+          ========================= */}
+
           {selectedUser && (
             <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -118,14 +146,18 @@ export function InviteMemberDialog({
               <button
                 type="button"
                 onClick={() => setSelectedUser(null)}
-                className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                disabled={isPending}
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           )}
 
-          {/* Search */}
+          {/* =========================
+              Search
+          ========================= */}
+
           {!selectedUser && (
             <div className="space-y-2">
               <Label htmlFor="member-search">Search user</Label>
@@ -145,7 +177,10 @@ export function InviteMemberDialog({
             </div>
           )}
 
-          {/* Results */}
+          {/* =========================
+              Search Results
+          ========================= */}
+
           {!selectedUser && debouncedSearch && (
             <div className="max-h-64 space-y-2 overflow-y-auto">
               {isLoading ? (
@@ -166,7 +201,8 @@ export function InviteMemberDialog({
                     key={user.id}
                     type="button"
                     onClick={() => setSelectedUser(user)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition hover:bg-muted/50"
+                    disabled={isPending}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition hover:bg-muted/50 disabled:pointer-events-none disabled:opacity-50"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                       {user.firstName.charAt(0)}
@@ -190,15 +226,20 @@ export function InviteMemberDialog({
             </div>
           )}
 
-          {/* Role */}
-          {selectedUser && roleOptions.length > 0 && (
+          {/* =========================
+              Role
+          ========================= */}
+
+          {selectedUser && roleOptions?.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="member-role">Role</Label>
 
               <select
                 id="member-role"
                 value={role}
-                onChange={(event) => setRole(event.target.value)}
+                onChange={(event) =>
+                  setRole(event.target.value as ProjectMemberRole)
+                }
                 disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
@@ -211,13 +252,20 @@ export function InviteMemberDialog({
             </div>
           )}
 
+          {/* =========================
+              Error
+          ========================= */}
+
           {isError && (
             <p className="text-sm text-destructive">
               Failed to invite member. Please try again.
             </p>
           )}
 
-          {/* Actions */}
+          {/* =========================
+              Actions
+          ========================= */}
+
           <div className="flex justify-end gap-2">
             <Button
               type="button"

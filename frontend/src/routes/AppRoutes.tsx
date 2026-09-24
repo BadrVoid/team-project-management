@@ -11,16 +11,20 @@ import SpacesPage from "@/pages/spaces/SpacesPage";
 import PublicSpacesPage from "@/pages/spaces/PublicSpacesPage";
 import SpaceDetailsPage from "@/pages/spaces/SpaceDetailsPage";
 
-import WorkspacePage from "@/pages/workspace/WorkspacePage";
 import ProjectDetailsPage from "@/pages/projects/ProjectDetailsPage";
 
-import NotificationsPage from "@/pages/notifications/NotificationsPage";
-import TaskDetailsPage from "@/pages/tasks/TaskDetailsPage";
-import ProtectedRoute from "@/routes/ProtectedRoute";
-import SettingsPage from "@/pages/settings/SettingsPage";
 import TeamDetailsPage from "@/pages/teams/TeamDetailsPage";
+
+import TaskDetailsPage from "@/pages/tasks/TaskDetailsPage";
+
+import NotificationsPage from "@/pages/notifications/NotificationsPage";
+
+import SettingsPage from "@/pages/settings/SettingsPage";
 import ProfilePage from "@/pages/profile/ProfilePage";
+
+import ProtectedRoute from "@/routes/ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import WorkspacePage from "@/pages/workspace/WorkspacePage";
 export function AppRoutes() {
   return (
     <Routes>
@@ -33,14 +37,19 @@ export function AppRoutes() {
       </Route>
 
       <Route path="/oauth/callback" element={<OAuthCallback />} />
+
       {/* =========================
           Protected Routes
       ========================= */}
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          {/* Dashboard */}
+          {/* =========================
+              Dashboard
+          ========================= */}
+
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/workspace" element={<WorkspacePage />} />
 
           {/* =========================
               Spaces
@@ -53,16 +62,22 @@ export function AppRoutes() {
           <Route path="/spaces/:spaceId" element={<SpaceDetailsPage />} />
 
           {/* =========================
-              Workspace
-          ========================= */}
-
-          <Route path="/workspace" element={<WorkspacePage />} />
-
-          {/* =========================
-              Project Details
+              Projects
           ========================= */}
 
           <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+
+          {/* =========================
+              Teams
+          ========================= */}
+
+          <Route path="/teams/:id" element={<TeamDetailsPage />} />
+
+          {/* =========================
+              Tasks
+          ========================= */}
+
+          <Route path="/tasks/:id" element={<TaskDetailsPage />} />
 
           {/* =========================
               Notifications
@@ -75,13 +90,12 @@ export function AppRoutes() {
           ========================= */}
 
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/tasks/:id" element={<TaskDetailsPage />} />
+
           {/* =========================
               Profile
           ========================= */}
-          <Route path="/profile" element={<ProfilePage />} />
 
-          <Route path="/teams/:id" element={<TeamDetailsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 

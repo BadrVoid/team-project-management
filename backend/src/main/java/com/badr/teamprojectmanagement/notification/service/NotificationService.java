@@ -11,7 +11,8 @@ public interface NotificationService {
     NotificationResponse createNotification(
             UUID userId,
             NotificationType type,
-            String message
+            String message,
+            UUID referenceId
     );
 
     List<NotificationResponse> getMyNotifications(

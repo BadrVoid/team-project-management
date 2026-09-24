@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 
 import { useUpdateTask } from "@/hooks/useTasks";
+
 import type {
   TaskDetailsResponse,
   TaskPriority,
@@ -45,23 +46,22 @@ export default function EditTaskDialog({
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [dueDate, setDueDate] = useState("");
-  const [assignedTo, setAssignedTo] = useState("unassigned");
+  const [assignedToId, setAssignedToId] = useState("unassigned");
 
   const updateTaskMutation = useUpdateTask();
 
   useEffect(() => {
     if (!open) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(task.title);
     setDescription(task.description ?? "");
     setStatus(task.status);
     setPriority(task.priority);
     setDueDate(task.dueDate ?? "");
-    setAssignedTo(task.assignedTo?.id ?? "unassigned");
+    setAssignedToId(task.assignedTo?.id ?? "unassigned");
   }, [open, task]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!title.trim()) return;
@@ -75,7 +75,7 @@ export default function EditTaskDialog({
           status,
           priority,
           dueDate: dueDate || null,
-          assignedTo: assignedTo === "unassigned" ? null : assignedTo,
+          assignedToId: assignedToId === "unassigned" ? null : assignedToId,
         },
       });
 
@@ -87,9 +87,10 @@ export default function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-background">
+      <DialogContent className="bg-background sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
+
           <DialogDescription>
             Update the task information and assignment.
           </DialogDescription>
@@ -102,6 +103,7 @@ export default function EditTaskDialog({
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
+              maxLength={150}
               required
             />
           </div>
@@ -113,6 +115,7 @@ export default function EditTaskDialog({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={4}
+              maxLength={5000}
             />
           </div>
 
@@ -172,14 +175,9 @@ export default function EditTaskDialog({
             <div className="space-y-2">
               <label className="text-sm font-medium">Assign to</label>
 
-              <Select
-                value={assignedTo}
-                onValueChange={(value) =>
-                  setAssignedTo(value ?? "unassigned")
-                }
-              >
+              <Select value={assignedToId} onValueChange={setAssignedToId}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select member" />
                 </SelectTrigger>
 
                 <SelectContent>
@@ -206,6 +204,7 @@ export default function EditTaskDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={updateTaskMutation.isPending}
             >
               Cancel
             </Button>

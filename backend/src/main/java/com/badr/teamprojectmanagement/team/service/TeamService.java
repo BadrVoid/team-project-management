@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface TeamService {
 
-    TeamResponse createTeam(TeamCreateRequest request);
+    TeamResponse createTeam(UUID userId, TeamCreateRequest request);
 
     TeamResponse getTeamById(UUID id);
 

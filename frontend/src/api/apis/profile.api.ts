@@ -1,4 +1,3 @@
-
 import { api } from "../axios";
 import { endpoints } from "../endpoints";
 import type {
@@ -22,6 +21,21 @@ export const profileApi = {
     const response = await api.put<
       GlobalResponse<UserProfileResponse>
     >(endpoints.profiles.me, data);
+
+    return response.data.data;
+  },
+
+  async uploadAvatar(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post<
+      GlobalResponse<string>
+    >(endpoints.profiles.avatar, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     return response.data.data;
   },

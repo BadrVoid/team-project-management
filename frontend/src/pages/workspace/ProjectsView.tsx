@@ -1,11 +1,14 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { FolderKanban, Loader2 } from "lucide-react";
+import { ArrowRight, CalendarDays, FolderKanban, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { getMySpaces } from "@/api/apis/spaces.api";
 import { getProjectsBySpace } from "@/api/apis/projects.api";
 import type { ProjectResponse } from "@/api/types";
 
 export default function ProjectsView() {
+  const navigate = useNavigate();
+
   const {
     data: spaces,
     isLoading: spacesLoading,
@@ -63,24 +66,75 @@ export default function ProjectsView() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onClick={() => navigate(`/projects/${project.id}`)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function ProjectCard({ project }: { project: ProjectResponse }) {
+/*
+   Project Card */
+
+function ProjectCard({
+  project,
+  onClick,
+}: {
+  project: ProjectResponse;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        group
+        w-full
+        rounded-2xl
+        border
+        border-border
+        bg-background
+        p-5
+        text-left
+        shadow-sm
+        transition-all
+        duration-200
+        hover:-translate-y-0.5
+        hover:border-primary/30
+        hover:bg-muted/20
+        hover:shadow-md
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-primary/50
+      "
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
           <FolderKanban className="h-5 w-5 text-primary" />
         </div>
 
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-          {formatStatus(project.status)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+            {formatStatus(project.status)}
+          </span>
+
+          <ArrowRight
+            className="
+              h-4
+              w-4
+              shrink-0
+              text-muted-foreground
+              transition-all
+              duration-200
+              group-hover:translate-x-0.5
+              group-hover:text-primary
+            "
+          />
+        </div>
       </div>
 
       <h3 className="mt-4 line-clamp-1 font-semibold">{project.name}</h3>
@@ -89,18 +143,24 @@ function ProjectCard({ project }: { project: ProjectResponse }) {
         {project.description || "No description provided."}
       </p>
 
-      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
         {project.startDate ? (
-          <span>Start: {formatDate(project.startDate)}</span>
+          <span className="flex items-center gap-1.5">
+            <CalendarDays className="h-3.5 w-3.5" />
+            Start: {formatDate(project.startDate)}
+          </span>
         ) : (
           <span>No start date</span>
         )}
 
         {project.endDate && <span>Due: {formatDate(project.endDate)}</span>}
       </div>
-    </div>
+    </button>
   );
 }
+
+/*
+   Helpers */
 
 function formatStatus(status: ProjectResponse["status"]) {
   return status
@@ -110,8 +170,15 @@ function formatStatus(status: ProjectResponse["status"]) {
 }
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString();
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
+
+/*
+   Loading */
 
 function LoadingState() {
   return (
@@ -121,6 +188,9 @@ function LoadingState() {
   );
 }
 
+/*
+   Error */
+
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-10 text-center">
@@ -128,6 +198,9 @@ function ErrorState({ message }: { message: string }) {
     </div>
   );
 }
+
+/*
+   Empty */
 
 function EmptyState({
   icon,

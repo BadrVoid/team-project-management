@@ -7,8 +7,10 @@ import com.badr.teamprojectmanagement.user.profile.dtos.UserProfileResponse;
 import com.badr.teamprojectmanagement.user.profile.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -42,6 +44,18 @@ public class UserProfileController {
                         user.getId(),
                         request
                 )
+        );
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public GlobalResponse<String> uploadAvatar(
+            @AuthenticationPrincipal User user,
+            @RequestParam("file") MultipartFile file
+    ) {
+
+        return GlobalResponse.success(
+                "Avatar uploaded successfully",
+                profileService.uploadAvatar(user.getId(), file)
         );
     }
 

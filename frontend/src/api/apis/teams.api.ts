@@ -56,3 +56,20 @@ export async function deleteTeam(
 ): Promise<void> {
   await api.delete(endpoints.teams.byId(id));
 }
+export async function acceptTeamInvitation(
+  teamId: string,
+  userId: string,
+): Promise<void> {
+  await api.patch(
+    endpoints.teams.acceptInvitation(teamId, userId),
+  );
+}
+
+export async function rejectTeamInvitation(
+  teamId: string,
+  userId: string,
+): Promise<void> {
+  await api.patch(
+    endpoints.teams.rejectInvitation(teamId, userId),
+  );
+}

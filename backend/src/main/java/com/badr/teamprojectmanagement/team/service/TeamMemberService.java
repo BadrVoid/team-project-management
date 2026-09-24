@@ -16,6 +16,16 @@ public interface TeamMemberService {
 
     List<TeamMemberResponse> getTeamMembers(UUID teamId);
 
+    TeamMemberResponse acceptInvitation(
+            UUID teamId,
+            UUID userId
+    );
+
+    TeamMemberResponse rejectInvitation(
+            UUID teamId,
+            UUID userId
+    );
+
     TeamMemberResponse updateMemberRole(
             UUID teamId,
             UUID currentUserId,

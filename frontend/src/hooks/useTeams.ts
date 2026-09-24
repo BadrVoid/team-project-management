@@ -4,13 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-
 import {
   createTeam,
   deleteTeam,
   getTeamById,
   getTeamsByProject,
-  updateTeam,
+  updateTeam, acceptTeamInvitation,
+  rejectTeamInvitation,
 } from "@/api/apis/teams.api";
 
 export function useTeamsByProject(projectId: string) {
@@ -53,7 +53,6 @@ export function useUpdateTeam() {
   return useMutation({
     mutationFn: ({
       id,
-      projectId,
       data,
     }: {
       id: string;
@@ -99,6 +98,77 @@ export function useDeleteTeam() {
 
       queryClient.removeQueries({
         queryKey: ["teams", variables.id],
+      });
+    },
+  });
+}
+export function useAcceptTeamInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      teamId,
+      userId,
+    }: {
+      teamId: string;
+      userId: string;
+    }) => acceptTeamInvitation(teamId, userId),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "unread"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "count"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.teamId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.teamId, "members"],
+      });
+    },
+  });
+}
+
+export function useRejectTeamInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      teamId,
+      userId,
+    }: {
+      teamId: string;
+      userId: string;
+    }) => rejectTeamInvitation(teamId, userId),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "unread"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", "count"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.teamId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.teamId, "members"],
       });
     },
   });

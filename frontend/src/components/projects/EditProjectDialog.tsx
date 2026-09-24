@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-
 import { useForm } from "react-hook-form";
+import { CalendarDays, Check, Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -22,6 +22,39 @@ interface EditProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   project: ProjectResponse | null;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (!error) return fallback;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const response = error as {
+      response?: {
+        data?: {
+          message?: string;
+          error?: string;
+        };
+      };
+      message?: string;
+    };
+
+    return (
+      response.response?.data?.message ??
+      response.response?.data?.error ??
+      response.message ??
+      fallback
+    );
+  }
+
+  return fallback;
 }
 
 export function EditProjectDialog({
@@ -48,21 +81,35 @@ export function EditProjectDialog({
   });
 
   const startDate = watch("startDate");
+  const isPending = updateProject.isPending;
 
   useEffect(() => {
-    if (project && open) {
-      reset({
-        name: project.name,
-        description: project.description ?? "",
-        status: project.status,
-        startDate: project.startDate ?? null,
-        endDate: project.endDate ?? null,
-      });
-    }
+    if (!project || !open) return;
+
+    reset({
+      name: project.name,
+      description: project.description ?? "",
+      status: project.status,
+      startDate: project.startDate ?? null,
+      endDate: project.endDate ?? null,
+    });
+
+    updateProject.reset();
   }, [project, open, reset]);
 
+  const handleOpenChange = (value: boolean) => {
+    if (isPending) return;
+
+    if (!value) {
+      reset();
+      updateProject.reset();
+    }
+
+    onOpenChange(value);
+  };
+
   const onSubmit = (data: UpdateProjectRequest) => {
-    if (!project) return;
+    if (!project || isPending) return;
 
     updateProject.mutate(
       {
@@ -78,29 +125,28 @@ export function EditProjectDialog({
       {
         onSuccess: () => {
           reset();
+          updateProject.reset();
+
+          // Stay on the project details page.
           onOpenChange(false);
         },
       },
     );
   };
 
-  const handleOpenChange = (value: boolean) => {
-    if (!value) {
-      reset();
-      updateProject.reset();
-    }
-
-    onOpenChange(value);
-  };
+  const errorMessage = getErrorMessage(
+    updateProject.error,
+    "We couldn't update this project. Please try again.",
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-background sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Edit Project</DialogTitle>
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-background sm:max-w-lg">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-xl">Edit Project</DialogTitle>
 
-          <DialogDescription>
-            Update the project's information.
+          <DialogDescription className="leading-6">
+            Update the project's details, status, and timeline.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,16 +159,17 @@ export function EditProjectDialog({
 
             <Input
               id="edit-project-name"
-              placeholder="Project name"
+              placeholder="Enter project name"
+              autoComplete="off"
+              disabled={isPending}
               {...register("name", {
-                required: "Project name is required",
-                minLength: {
-                  value: 2,
-                  message: "Project name must be at least 2 characters",
-                },
+                required: "Project name is required.",
+                validate: (value) =>
+                  value.trim().length >= 2 ||
+                  "Project name must be at least 2 characters.",
                 maxLength: {
                   value: 100,
-                  message: "Project name cannot exceed 100 characters",
+                  message: "Project name cannot exceed 100 characters.",
                 },
               })}
             />
@@ -134,22 +181,27 @@ export function EditProjectDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <label
-              htmlFor="edit-project-description"
-              className="text-sm font-medium"
-            >
-              Description
-            </label>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="edit-project-description"
+                className="text-sm font-medium"
+              >
+                Description
+              </label>
+
+              <span className="text-xs text-muted-foreground">Optional</span>
+            </div>
 
             <Textarea
               id="edit-project-description"
-              placeholder="Project description"
+              placeholder="Describe what this project is about..."
               rows={4}
+              disabled={isPending}
               className="resize-none"
               {...register("description", {
                 maxLength: {
                   value: 500,
-                  message: "Description cannot exceed 500 characters",
+                  message: "Description cannot exceed 500 characters.",
                 },
               })}
             />
@@ -172,7 +224,8 @@ export function EditProjectDialog({
 
             <select
               id="edit-project-status"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              disabled={isPending}
+              className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
               {...register("status")}
             >
               <option value="PLANNING">Planning</option>
@@ -182,60 +235,107 @@ export function EditProjectDialog({
             </select>
           </div>
 
-          {/* Dates */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="edit-project-start-date"
-                className="text-sm font-medium"
-              >
-                Start Date
-              </label>
+          {/* Timeline */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
 
-              <Input
-                id="edit-project-start-date"
-                type="date"
-                {...register("startDate")}
-              />
+              <span className="text-sm font-medium">Project Timeline</span>
             </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="edit-project-end-date"
-                className="text-sm font-medium"
-              >
-                End Date
-              </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label
+                  htmlFor="edit-project-start-date"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Start Date
+                </label>
 
-              <Input
-                id="edit-project-end-date"
-                type="date"
-                min={startDate || undefined}
-                {...register("endDate")}
-              />
+                <Input
+                  id="edit-project-start-date"
+                  type="date"
+                  disabled={isPending}
+                  {...register("startDate")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="edit-project-end-date"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  End Date
+                </label>
+
+                <Input
+                  id="edit-project-end-date"
+                  type="date"
+                  min={startDate || undefined}
+                  disabled={isPending}
+                  {...register("endDate", {
+                    validate: (value) => {
+                      if (!value || !startDate) {
+                        return true;
+                      }
+
+                      return (
+                        value >= startDate ||
+                        "End date must be on or after the start date."
+                      );
+                    },
+                  })}
+                />
+
+                {errors.endDate && (
+                  <p className="text-xs text-destructive">
+                    {errors.endDate.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Error */}
+          {/* Real API error */}
           {updateProject.isError && (
-            <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Failed to update project. Please try again.
-            </p>
+            <div
+              role="alert"
+              className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3"
+            >
+              <p className="text-sm font-medium text-destructive">
+                {errorMessage}
+              </p>
+            </div>
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
-              disabled={updateProject.isPending}
+              disabled={isPending}
+              className="rounded-xl"
             >
               Cancel
             </Button>
 
-            <Button type="submit" disabled={updateProject.isPending}>
-              {updateProject.isPending ? "Saving..." : "Save Changes"}
+            <Button
+              type="submit"
+              disabled={isPending || !project}
+              className="rounded-xl"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
         </form>

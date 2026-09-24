@@ -5,10 +5,12 @@ import com.badr.teamprojectmanagement.team.dtos.TeamCreateRequest;
 import com.badr.teamprojectmanagement.team.dtos.TeamResponse;
 import com.badr.teamprojectmanagement.team.dtos.TeamUpdateRequest;
 import com.badr.teamprojectmanagement.team.service.TeamService;
+import com.badr.teamprojectmanagement.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,11 +25,15 @@ public class TeamController {
 
     @PostMapping
     public ResponseEntity<GlobalResponse<TeamResponse>> createTeam(
-            @Valid @RequestBody TeamCreateRequest request
+            @Valid @RequestBody TeamCreateRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
 
         TeamResponse response =
-                teamService.createTeam(request);
+                teamService.createTeam(
+                        currentUser.getId(),
+                        request
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

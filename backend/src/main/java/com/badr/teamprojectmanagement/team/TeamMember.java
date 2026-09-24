@@ -1,6 +1,7 @@
 package com.badr.teamprojectmanagement.team;
 
 import com.badr.teamprojectmanagement.common.entity.BaseEntity;
+import com.badr.teamprojectmanagement.common.enums.RequestStatus;
 import com.badr.teamprojectmanagement.common.enums.TeamMemberRole;
 import com.badr.teamprojectmanagement.user.User;
 import jakarta.persistence.*;
@@ -32,4 +33,9 @@ public class TeamMember extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TeamMemberRole role = TeamMemberRole.MEMBER;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private RequestStatus status = RequestStatus.PENDING;
 }

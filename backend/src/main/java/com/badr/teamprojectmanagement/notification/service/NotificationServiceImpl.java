@@ -30,7 +30,8 @@ public class NotificationServiceImpl
     public NotificationResponse createNotification(
             UUID userId,
             NotificationType type,
-            String message
+            String message,
+            UUID referenceId
     ) {
 
         User user = userRepository.findById(userId)
@@ -43,6 +44,7 @@ public class NotificationServiceImpl
                 .user(user)
                 .type(type)
                 .message(message)
+                .referenceId(referenceId)
                 .build();
 
         Notification saved =

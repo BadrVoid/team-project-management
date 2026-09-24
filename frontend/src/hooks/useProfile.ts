@@ -24,3 +24,17 @@ export function useUpdateMyProfile() {
     },
   });
 }
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => profileApi.uploadAvatar(file),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["profile", "me"],
+      });
+    },
+  });
+}

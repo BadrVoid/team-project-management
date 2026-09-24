@@ -303,7 +303,8 @@ public class SpaceServiceImpl implements SpaceService {
                         NotificationType.SPACE_JOIN_REQUEST,
                         user.getFirstName() + " " + user.getLastName()
                                 + " requested to join your space: "
-                                + space.getName()
+                                + space.getName(),
+                        space.getId()
                 );
 
                 return mapToPublicResponse(
@@ -343,7 +344,7 @@ public class SpaceServiceImpl implements SpaceService {
                 NotificationType.SPACE_JOIN_REQUEST,
                 user.getFirstName() + " " + user.getLastName()
                         + " requested to join your space: "
-                        + space.getName()
+                        + space.getName(), space.getId()
         );
 
         return mapToPublicResponse(
@@ -465,7 +466,7 @@ public class SpaceServiceImpl implements SpaceService {
                 NotificationType.SPACE_JOIN_REQUEST_ACCEPTED,
                 "Your request to join the space: "
                         + space.getName()
-                        + " was accepted."
+                        + " was accepted.", space.getId()
         );
     }
 
@@ -532,7 +533,7 @@ public class SpaceServiceImpl implements SpaceService {
                 NotificationType.SPACE_JOIN_REQUEST_REJECTED,
                 "Your request to join the space: "
                         + space.getName()
-                        + " was rejected."
+                        + " was rejected.", space.getId()
         );
     }
 

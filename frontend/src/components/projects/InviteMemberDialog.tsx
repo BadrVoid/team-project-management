@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 
 import { useDiscoverUsers } from "@/hooks/useUsers";
-import { useInviteMember } from "@/hooks/project-members.hooks";
+import { useInviteMember } from "@/hooks/useProjectMembers";
 import type { ProjectMemberRole, UserDiscoveryResponse } from "@/api/types";
 
 interface InviteMemberDialogProps {

@@ -264,6 +264,8 @@ public class ProjectJoinRequestServiceImpl
                 NotificationType.PROJECT_INVITATION,
                 "You have been invited to join project: "
                         + project.getName()
+                ,
+                project.getId()
         );
 
         return mapToResponse(savedRequest);
