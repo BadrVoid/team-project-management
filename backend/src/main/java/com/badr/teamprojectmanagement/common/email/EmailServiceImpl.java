@@ -23,25 +23,36 @@ public class EmailServiceImpl implements EmailService {
             OtpType type
     ) {
         String subject;
-        String headerTitle;
+        String title;
         String description;
 
-        if (type == OtpType.EMAIL_VERIFICATION) {
-            subject = "Verify your email - Team Project Management";
-            headerTitle = "Verify Your Email";
-            description = "Thank you for joining Team Project Management! Please use the verification code below to complete your registration process.";
-        } else if (type == OtpType.PASSWORD_RESET) {
-            subject = "Password Reset - Team Project Management";
-            headerTitle = "Reset Your Password";
-            description = "We received a request to reset your password. Use the verification code below to securely set a new password.";
-        } else {
-            subject = "Verification Code - Team Project Management";
-            headerTitle = "Your Verification Code";
-            description = "Please use the verification code below to complete your action.";
+        switch (type) {
+            case EMAIL_VERIFICATION -> {
+                subject = "Verify your email | Team Project Management";
+                title = "Verify Your Email";
+                description =
+                        "Welcome to Team Project Management. " +
+                                "Use the verification code below to verify your email address.";
+            }
+
+            case PASSWORD_RESET -> {
+                subject = "Reset your password | Team Project Management";
+                title = "Reset Your Password";
+                description =
+                        "We received a request to reset your password. " +
+                                "Use the code below to continue.";
+            }
+
+            default -> {
+                subject = "Your verification code | Team Project Management";
+                title = "Verification Code";
+                description =
+                        "Use the verification code below to complete your request.";
+            }
         }
 
         String htmlContent = buildOtpEmailTemplate(
-                headerTitle,
+                title,
                 description,
                 otp,
                 "5 minutes"
@@ -50,88 +61,240 @@ public class EmailServiceImpl implements EmailService {
         sendHtmlMessage(to, subject, htmlContent);
     }
 
-    private void sendHtmlMessage(String to, String subject, String htmlBody) {
+    private void sendHtmlMessage(
+            String to,
+            String subject,
+            String htmlBody
+    ) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(htmlBody, true); // true indicates HTML content
+            helper.setText(htmlBody, true);
 
             mailSender.send(message);
+
+            log.info("Email sent successfully to {}", to);
+
         } catch (MessagingException e) {
             log.error("Failed to send email to {}", to, e);
             throw new RuntimeException("Failed to send email", e);
         }
     }
 
-    private String buildOtpEmailTemplate(String title, String description, String otp, String expirationTime) {
+    private String buildOtpEmailTemplate(
+            String title,
+            String description,
+            String otp,
+            String expirationTime
+    ) {
         return """
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="color-scheme" content="light">
                 <title>%s</title>
             </head>
-            <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%%" style="background-color: #f4f6f9; padding: 40px 0;">
+
+            <body style="
+                margin: 0;
+                padding: 0;
+                background-color: #f1f5f9;
+                font-family: Arial, Helvetica, sans-serif;
+                color: #0f172a;
+            ">
+
+                <table
+                    width="100%%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    border="0"
+                    style="
+                        background-color: #f1f5f9;
+                        padding: 40px 16px;
+                    "
+                >
                     <tr>
                         <td align="center">
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%%" style="max-width: 520px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
-                                
+
+                            <table
+                                width="100%%"
+                                cellpadding="0"
+                                cellspacing="0"
+                                border="0"
+                                style="
+                                    max-width: 520px;
+                                    background-color: #ffffff;
+                                    border-radius: 12px;
+                                    overflow: hidden;
+                                    border: 1px solid #e2e8f0;
+                                "
+                            >
+
                                 <!-- Header -->
                                 <tr>
-                                    <td align="center" style="background-color: #1e293b; padding: 28px 20px;">
-                                        <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px;">
+                                    <td
+                                        style="
+                                            background-color: #0f172a;
+                                            padding: 28px 32px;
+                                            text-align: center;
+                                        "
+                                    >
+                                        <div style="
+                                            font-size: 13px;
+                                            font-weight: 600;
+                                            letter-spacing: 1.5px;
+                                            text-transform: uppercase;
+                                            color: #94a3b8;
+                                            margin-bottom: 8px;
+                                        ">
                                             Team Project Management
-                                        </h1>
+                                        </div>
+
+                                        <div style="
+                                            font-size: 22px;
+                                            font-weight: 700;
+                                            color: #ffffff;
+                                        ">
+                                            %s
+                                        </div>
                                     </td>
                                 </tr>
 
-                                <!-- Body -->
+                                <!-- Content -->
                                 <tr>
-                                    <td style="padding: 36px 32px; color: #334155; font-size: 15px; line-height: 1.6;">
-                                        <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 18px; font-weight: 600;">
-                                            %s
-                                        </h2>
-                                        <p style="margin: 0 0 24px 0; color: #475569;">
+                                    <td style="padding: 36px 32px 32px 32px;">
+
+                                        <p style="
+                                            margin: 0 0 24px 0;
+                                            font-size: 15px;
+                                            line-height: 1.7;
+                                            color: #475569;
+                                        ">
                                             %s
                                         </p>
 
-                                        <!-- OTP Box -->
-                                        <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                                            <span style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #2563eb;">
+                                        <!-- OTP -->
+                                        <table
+                                            width="100%%"
+                                            cellpadding="0"
+                                            cellspacing="0"
+                                            border="0"
+                                            style="
+                                                background-color: #f8fafc;
+                                                border: 1px solid #e2e8f0;
+                                                border-radius: 10px;
+                                            "
+                                        >
+                                            <tr>
+                                                <td
+                                                    align="center"
+                                                    style="padding: 24px 16px;"
+                                                >
+                                                    <div style="
+                                                        font-size: 11px;
+                                                        font-weight: 600;
+                                                        letter-spacing: 1.5px;
+                                                        text-transform: uppercase;
+                                                        color: #64748b;
+                                                        margin-bottom: 12px;
+                                                    ">
+                                                        Verification Code
+                                                    </div>
+
+                                                    <div style="
+                                                        font-family: 'Courier New', monospace;
+                                                        font-size: 32px;
+                                                        font-weight: 700;
+                                                        letter-spacing: 8px;
+                                                        color: #2563eb;
+                                                    ">
+                                                        %s
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Expiration -->
+                                        <p style="
+                                            margin: 20px 0 0 0;
+                                            text-align: center;
+                                            font-size: 13px;
+                                            line-height: 1.6;
+                                            color: #64748b;
+                                        ">
+                                            This code expires in
+                                            <strong style="color: #334155;">
                                                 %s
-                                            </span>
-                                        </div>
-
-                                        <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b; text-align: center;">
-                                            This code will expire in <strong>%s</strong>.
+                                            </strong>.
                                         </p>
-                                        
-                                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
 
-                                        <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center;">
-                                            If you did not request this email, please ignore it or contact support if you have concerns.
+                                        <!-- Divider -->
+                                        <div style="
+                                            height: 1px;
+                                            background-color: #e2e8f0;
+                                            margin: 28px 0;
+                                        "></div>
+
+                                        <!-- Security note -->
+                                        <p style="
+                                            margin: 0;
+                                            text-align: center;
+                                            font-size: 12px;
+                                            line-height: 1.6;
+                                            color: #94a3b8;
+                                        ">
+                                            If you didn't request this code,
+                                            you can safely ignore this email.
+                                            Never share your verification code with anyone.
                                         </p>
+
                                     </td>
                                 </tr>
 
                                 <!-- Footer -->
                                 <tr>
-                                    <td align="center" style="background-color: #f8fafc; padding: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-                                        &copy; %d Team Project Management. All rights reserved.
+                                    <td
+                                        align="center"
+                                        style="
+                                            background-color: #f8fafc;
+                                            border-top: 1px solid #e2e8f0;
+                                            padding: 18px 24px;
+                                        "
+                                    >
+                                        <p style="
+                                            margin: 0;
+                                            font-size: 11px;
+                                            color: #94a3b8;
+                                            line-height: 1.5;
+                                        ">
+                                            &copy; %d Team Project Management
+                                        </p>
                                     </td>
                                 </tr>
 
                             </table>
+
                         </td>
                     </tr>
                 </table>
+
             </body>
             </html>
-            """.formatted(title, title, description, otp, expirationTime, java.time.Year.now().getValue());
+            """
+                .formatted(
+                        title,
+                        title,
+                        description,
+                        otp,
+                        expirationTime,
+                        java.time.Year.now().getValue()
+                );
     }
 }
